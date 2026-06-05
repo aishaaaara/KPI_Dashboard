@@ -1,0 +1,473 @@
+<div class="sidebar" id="sidebar">
+
+    <div>
+
+        {{-- TOP --}}
+        <div class="sidebar-top">
+
+            {{-- LOGO --}}
+            <div class="logo-box">
+
+                <h4 class="logo-text">
+                    Dev KPI Tracker
+                </h4>
+
+                <small class="logo-sub">
+                    Team Analytics
+                </small>
+
+            </div>
+
+            {{-- TOGGLE --}}
+            <button class="toggle-btn"
+                    id="toggleSidebar">
+
+                <i class="bi bi-list"></i>
+
+            </button>
+
+        </div>
+
+        {{-- NAVIGATION --}}
+        <div class="menu-title">
+            Navigation
+        </div>
+
+        <ul class="sidebar-menu">
+
+            {{-- DASHBOARD --}}
+            <li>
+                <a href="/admin/dashboard"
+                   class="{{ request()->is('admin/dashboard') ? 'active' : '' }}">
+
+                    <i class="bi bi-grid-fill"></i>
+
+                    <span>
+                        Dashboard
+                    </span>
+
+                </a>
+            </li>
+
+            {{-- MEMBERS --}}
+            <li>
+                <a href="/admin/members"
+                   class="{{ request()->is('admin/members*') ? 'active' : '' }}">
+
+                    <i class="bi bi-people-fill"></i>
+
+                    <span>
+                        Team Member
+                    </span>
+
+                </a>
+            </li>
+
+        </ul>
+
+        {{-- METRICS --}}
+        <div class="menu-title">
+            Metrics
+        </div>
+
+        <ul class="sidebar-menu">
+
+            {{-- COMMUNICATION --}}
+            <li>
+                <a href="/admin/communication"
+                   class="{{ request()->is('admin/communication*') ? 'active' : '' }}">
+
+                    <i class="bi bi-chat-left-text-fill"></i>
+
+                    <span>
+                        Communication
+                    </span>
+
+                </a>
+            </li>
+
+            {{-- STORY POINT --}}
+            <li>
+                <a href="/admin/story-points"
+                   class="{{ request()->is('admin/story-points*') ? 'active' : '' }}">
+
+                    <i class="bi bi-journal-text"></i>
+
+                    <span>
+                        Story Points
+                    </span>
+
+                </a>
+            </li>
+
+            {{-- WORKLOAD --}}
+            <li>
+                <a href="/admin/workload"
+                   class="{{ request()->is('admin/workload*') ? 'active' : '' }}">
+
+                    <i class="bi bi-kanban-fill"></i>
+
+                    <span>
+                        Workload
+                    </span>
+
+                </a>
+            </li>
+
+        </ul>
+
+        {{-- OTHERS --}}
+        <div class="menu-title">
+            Others
+        </div>
+
+        <ul class="sidebar-menu">
+
+            {{-- PERFORMANCE --}}
+            <li>
+                <a href="/admin/performance-insight"
+                   class="{{ request()->is('admin/performance-insight*') ? 'active' : '' }}">
+
+                    <i class="bi bi-graph-up-arrow"></i>
+
+                    <span>
+                        Performance Insight
+                    </span>
+
+                </a>
+            </li>
+
+            {{-- APPROVAL --}}
+            <li>
+                <a href="/admin/approvals"
+                   class="{{ request()->is('admin/approvals*') ? 'active' : '' }}">
+
+                    <i class="bi bi-person-check-fill"></i>
+
+                    <span>
+                        Approval
+                    </span>
+
+                </a>
+            </li>
+
+        </ul>
+
+</div>
+
+{{-- USER PROFILE --}}
+<div class="sidebar-user">
+
+    <div class="user-info">
+
+        <div class="user-avatar">
+
+            <i class="bi bi-person-circle"></i>
+
+        </div>
+
+        <div class="user-detail">
+
+            <div class="user-name">
+
+                Administrator
+
+            </div>
+
+            <small>
+
+                Admin Access
+
+            </small>
+
+        </div>
+
+    </div>
+
+   <form action="{{ route('logout') }}"
+      method="POST">
+
+    @csrf
+
+    <button type="submit"
+            class="logout-btn border-0 bg-transparent">
+
+        <i class="bi bi-box-arrow-right"></i>
+
+    </button>
+
+</form>
+</div>
+
+</div>
+
+<style>
+
+.sidebar{
+    width:260px;
+    min-height:100vh;
+    background:#082B5B;
+    padding:24px 18px;
+    color:white;
+    position:sticky;
+    top:0;
+    transition:0.3s;
+    overflow:hidden;
+}
+
+/* COLLAPSE */
+.sidebar.collapsed{
+    width:88px;
+}
+
+/* TOP */
+.sidebar-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    margin-bottom:30px;
+}
+
+/* LOGO */
+.logo-box{
+    transition:0.3s;
+}
+
+.logo-box h4{
+    font-size:18px;
+    margin-bottom:4px;
+    font-weight:700;
+    white-space:nowrap;
+}
+
+.logo-box small{
+    opacity:0.7;
+    font-size:13px;
+    white-space:nowrap;
+}
+
+/* HIDE TEXT */
+.sidebar.collapsed .logo-text,
+.sidebar.collapsed .logo-sub,
+.sidebar.collapsed .menu-title,
+.sidebar.collapsed .sidebar-menu span{
+    display:none;
+}
+
+/* MENU TITLE */
+.menu-title{
+    font-size:12px;
+    opacity:0.6;
+    margin-bottom:10px;
+    margin-top:24px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    transition:0.3s;
+}
+
+/* MENU */
+.sidebar-menu{
+    list-style:none;
+    padding:0;
+    margin:0;
+}
+
+.sidebar-menu li{
+    margin-bottom:10px;
+}
+
+.sidebar-menu a{
+    text-decoration:none;
+    color:white;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:12px 14px;
+    border-radius:14px;
+    transition:0.3s;
+    font-size:14px;
+    font-weight:500;
+    white-space:nowrap;
+}
+
+/* CENTER ICON */
+.sidebar.collapsed .sidebar-menu a{
+    width:56px;
+    height:56px;
+    margin:auto;
+    padding:0;
+    justify-content:center;
+    border-radius:18px;
+
+}
+/* ICON */
+.sidebar.collapsed .sidebar-menu i{
+    margin:0;
+    min-width:auto;
+    font-size:20px;
+}
+
+/* ACTIVE */
+.sidebar.collapsed .sidebar-menu a.active{
+    background:#0F4C9C;
+    color:white;
+}
+
+/* SPACING */
+.sidebar.collapsed .sidebar-menu li{
+    margin-bottom:14px;
+}
+
+/* TOGGLE BUTTON */
+.sidebar.collapsed .toggle-btn{
+    margin:auto;
+}
+.sidebar.collapsed .sidebar-top{
+    justify-content:center;
+}
+/* HOVER */
+.sidebar-menu a:hover{
+    background:#0F4C9C;
+    color:white;
+}
+
+.sidebar-menu .active{
+    background:#0F4C9C;
+    color:white;
+}
+
+/* ICON */
+.sidebar-menu i{
+    font-size:18px;
+    min-width:20px;
+}
+
+/* TOGGLE BUTTON */
+.toggle-btn{
+    width:40px;
+    height:40px;
+    border:none;
+    border-radius:12px;
+    background:#0F4C9C;
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.toggle-btn:hover{
+    background:#1a5db5;
+}
+
+/* MOBILE */
+@media(max-width:768px){
+
+    .sidebar{
+        position:fixed;
+        z-index:999;
+        left:-260px;
+    }
+
+    .sidebar.show{
+        left:0;
+    }
+
+}
+/* PUSH USER TO BOTTOM */
+.sidebar{
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+}
+
+/* USER CARD */
+.sidebar-user{
+    margin-top:30px;
+    background:white;
+    border-radius:10px;
+    padding:10px 12px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+}
+
+/* USER INFO */
+.user-info{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+/* AVATAR */
+.user-avatar{
+    font-size:32px;
+    color:#9ca3af;
+    line-height:1;
+}
+
+/* DETAIL */
+.user-detail{
+    display:flex;
+    flex-direction:column;
+}
+
+.user-name{
+    color:#1f2937;
+    font-size:14px;
+    font-weight:600;
+}
+
+.user-detail small{
+    color:#6b7280;
+    font-size:12px;
+}
+
+/* LOGOUT */
+.logout-btn{
+    color:#6b7280;
+    font-size:22px;
+    transition:.3s;
+}
+
+.logout-btn:hover{
+    color:#ef4444;
+}
+
+/* COLLAPSED */
+.sidebar.collapsed .user-detail{
+    display:none;
+}
+
+.sidebar.collapsed .sidebar-user{
+    justify-content:center;
+    padding:10px;
+}
+
+.sidebar.collapsed .logout-btn{
+    display:none;
+}
+</style>
+
+<script>
+
+const sidebar = document.getElementById('sidebar');
+const toggleBtn = document.getElementById('toggleSidebar');
+
+toggleBtn.addEventListener('click', () => {
+
+    if(window.innerWidth <= 768){
+
+        sidebar.classList.toggle('show');
+
+    }else{
+
+        sidebar.classList.toggle('collapsed');
+
+    }
+
+});
+
+</script>
