@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\RegisterRequest;
+use App\Services\NotificationService; 
 
 class RegisterController extends Controller
 {
@@ -14,36 +15,25 @@ class RegisterController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $request->validate([
+{
+    $request->validate([
+        'name'     => 'required|string|max:255',
+        'email'    => 'required|email|unique:register_requests,email',
+        'password' => 'required|min:6|confirmed',
+    ]);
 
-            'name' => 'required|string|max:255',
+    RegisterRequest::create([
+        'name'     => $request->name,
+        'email'    => $request->email,
+        'password' => Hash::make($request->password),
+        'status'   => 'pending',
+    ]);
 
-            'email' => 'required|email|unique:register_requests,email',
+    // Notifikasi ke semua admin
+    app(NotificationService::class)->notifyNewApprovalRequest($request->name);
 
-            'password' => 'required|min:6|confirmed'
-
-        ]);
-
-        RegisterRequest::create([
-
-            'name' => $request->name,
-
-            'email' => $request->email,
-
-            'password' => Hash::make(
-                $request->password
-            ),
-
-            'status' => 'pending'
-
-        ]);
-
-        return redirect()
-            ->route('login')
-            ->with(
-                'success',
-                'Permintaan registrasi berhasil dikirim. Silakan tunggu approval admin.'
-            );
-    }
+    return redirect()
+        ->route('login')
+        ->with('success', 'Permintaan registrasi berhasil dikirim. Silakan tunggu approval admin.');
+}
 }

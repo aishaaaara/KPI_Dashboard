@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Workload;
 use App\Models\Member;
 use App\Models\Period;
-
+use App\Services\NotificationService;
 
 class WorkloadController extends Controller
 {
@@ -132,28 +132,28 @@ public function storePeriod(Request $request)
     ]);
 
     $periodId = $request->period_id;
-
-    $members = Member::all();
+    $members  = Member::all();
 
     foreach ($members as $member) {
         Workload::create([
             'member_id' => $member->id,
             'period_id' => $periodId,
-            'all_task' => 0,
-            'todo' => 0,
-            'progress' => 0,
-            'review' => 0,
-            'done' => 0,
+            'all_task'  => 0,
+            'todo'      => 0,
+            'progress'  => 0,
+            'review'    => 0,
+            'done'      => 0,
         ]);
     }
 
-    return redirect()
-        ->back()
-        ->with(
-            'success',
-            'Workload for the period added successfully'
-        );
+    // Ambil nama periode untuk notifikasi
+    $period = Period::find($periodId);
 
+    app(NotificationService::class)->notifyNewWorkloadPeriod(
+        $period->month . ' ' . $period->year
+    );
+
+    return redirect()->back()->with('success', 'Workload for the period added successfully');
 }
 
 }

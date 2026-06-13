@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\NotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -51,13 +52,19 @@ Route::post('/register', [RegisterController::class, 'store'])->name('register.s
 
 Route::get('/forgot-password', fn() => view('auth.forgot-password'))->name('forgot.password');
 
+
+Route::middleware('auth')->group(function () {
+    Route::get('/notifications',             [NotificationController::class, 'page'])->name('notifications.index');
+    Route::post('/notifications/{id}/read',  [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/read-all',   [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+});
 /*
 |--------------------------------------------------------------------------
 | ADMIN
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('auth')
+Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
     ->group(function () {
 
@@ -117,7 +124,7 @@ Route::middleware('auth')
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('auth')
+Route::middleware(['auth', 'role:member'])
     ->prefix('member')
     ->group(function () {
 

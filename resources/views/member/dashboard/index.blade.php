@@ -31,9 +31,15 @@
             </select>
         </form>
 
-        <button class="btn-icon" title="Notifications">
+        <a href="{{ route('notifications.index') }}" class="btn-icon" title="Notifications" style="text-decoration:none; position:relative;">
             <i class="bi bi-bell-fill"></i>
-        </button>
+            @php
+                $unreadCount = \App\Models\Notification::forUser(auth()->id())->unread()->count();
+            @endphp
+            @if ($unreadCount > 0)
+                <span class="bell-badge">{{ $unreadCount > 99 ? '99+' : $unreadCount }}</span>
+            @endif
+        </a>
 
     </div>
 
@@ -547,6 +553,23 @@
 
 .tab-content.active{
     display:block;
+}
+.bell-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
 }
 </style>
 

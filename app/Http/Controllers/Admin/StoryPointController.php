@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\StoryPoint;
 use App\Models\Member;
 use App\Models\Period;
+use App\Services\NotificationService;
 
 
 class StoryPointController extends Controller
@@ -57,7 +58,7 @@ public function store(Request $request)
         'totals' => $request->totals,
         'summary' => $achievement,
     ]);
-
+    
     return redirect()
         ->back()
         ->with(
@@ -67,41 +68,24 @@ public function store(Request $request)
 }
 
 public function storePeriod(Request $request)
-    {
-        $exists = Period::where(
+{
+    $exists = Period::where('month', $request->month)
+        ->where('year', $request->year)
+        ->exists();
 
-                'month',
-                $request->month
+    if (!$exists) {
+        $period = Period::create([
+            'month' => $request->month,
+            'year'  => $request->year,
+        ]);
 
-            )
-
-            ->where(
-
-                'year',
-                $request->year
-
-            )
-
-            ->exists();
-
-        if(!$exists){
-
-            Period::create([
-
-                'month' => $request->month,
-
-                'year' => $request->year
-
-            ]);
-        }
-
-        return redirect()
-            ->back()
-            ->with(
-                'success',
-                'New month added successfully'
-            );
+        app(NotificationService::class)->notifyNewStoryPointPeriod(
+            $period->month . ' ' . $period->year
+        );
     }
+
+    return redirect()->back()->with('success', 'New month added successfully');
+}
     
 public function update(Request $request,$id)
 {

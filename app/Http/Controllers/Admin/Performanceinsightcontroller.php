@@ -10,6 +10,7 @@ use App\Models\Workload;
 use App\Models\Period;
 use App\Models\Member;
 use App\Models\PerformanceInsight;
+use App\Services\NotificationService;
 
 class PerformanceInsightController extends Controller
 {
@@ -190,26 +191,27 @@ class PerformanceInsightController extends Controller
     }
 
     public function send(Request $request)
-    {
-        PerformanceInsight::whereIn(
-            'id',
-            $request->selected ?? []
-        )
-        ->update([
+{
+    $ids = $request->selected ?? [];
 
-            'is_sent' => 1,
+    $insights = PerformanceInsight::with(['member.user', 'period'])
+        ->whereIn('id', $ids)
+        ->get();
 
-            'sent_at' => now(),
-
-            'admin_notes' => $request->admin_notes
-
+    foreach ($insights as $insight) {
+        $insight->update([
+            'is_sent'     => 1,
+            'sent_at'     => now(),
+            'admin_notes' => $request->admin_notes,
         ]);
 
-        return redirect()
-            ->back()
-            ->with(
-                'success',
-                'Insight berhasil dikirim'
-            );
+        // Notifikasi ke member yang bersangkutan
+        app(NotificationService::class)->notifyPerformanceInsightSent(
+            $insight->member->user_id,
+            $insight->period->month . ' ' . $insight->period->year
+        );
     }
+
+    return redirect()->back()->with('success', 'Insight berhasil dikirim');
+}
 }
