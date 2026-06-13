@@ -15,27 +15,124 @@
     @endif
 
     {{-- HEADER --}}
-    <div class="member-header">
+<div class="member-header">
 
-        <div>
+    <div class="header-info">
+        <h2>Team Member</h2>
+        <p>Members Management</p>
+    </div>
 
-            <h2>Team Member</h2>
+    <div class="header-actions">
 
-            <p>
-                Members Management
-            </p>
+        {{-- TEMPLATE --}}
+        <a href="{{ route('members.template') }}"
+           class="btn-custom btn-template">
+            <i class="bi bi-file-earmark-excel"></i>
+            Template
+        </a>
 
-        </div>
+        {{-- EXPORT --}}
+        <a href="{{ route('members.export') }}"
+           class="btn-custom btn-export">
+            <i class="bi bi-download"></i>
+            Export
+        </a>
 
-        <button class="btn-add"
+        {{-- IMPORT --}}
+        <button type="button"
+                class="btn-custom btn-import"
+                data-bs-toggle="modal"
+                data-bs-target="#importModal">
+            <i class="bi bi-upload"></i>
+            Import
+        </button>
+
+        {{-- ADD --}}
+        <button type="button"
+                class="btn-custom btn-add"
                 data-bs-toggle="modal"
                 data-bs-target="#addMemberModal">
-
-            + Add Member
-
+            <i class="bi bi-plus-circle"></i>
+            Add Member
         </button>
 
     </div>
+
+</div>
+
+{{-- SEARCH & FILTER --}}
+<div class="filter-card">
+
+    <form method="GET"
+          action="{{ route('members.index') }}"
+          id="filterForm"
+          class="filter-wrapper">
+
+        {{-- SEARCH --}}
+        <div class="search-box">
+
+            <i class="bi bi-search"></i>
+
+            <input type="text"
+                   name="search"
+                   id="searchInput"
+                   placeholder="Search member..."
+                   value="{{ request('search') }}">
+
+        </div>
+
+        {{-- TEAM --}}
+        <select name="team_id"
+                class="filter-select auto-filter">
+
+            <option value="">
+                All Team
+            </option>
+
+            @foreach($teams as $team)
+
+                <option value="{{ $team->id }}"
+                    {{ request('team_id') == $team->id ? 'selected' : '' }}>
+
+                    {{ $team->name }}
+
+                </option>
+
+            @endforeach
+
+        </select>
+
+        {{-- EMPLOYMENT TYPE --}}
+        <select name="employment_type_id"
+                class="filter-select auto-filter">
+
+            <option value="">
+                All Type
+            </option>
+
+            @foreach($employmentTypes as $type)
+
+                <option value="{{ $type->id }}"
+                    {{ request('employment_type_id') == $type->id ? 'selected' : '' }}>
+
+                    {{ $type->name }}
+
+                </option>
+
+            @endforeach
+
+        </select>
+
+        <a href="{{ route('members.index') }}"
+           class="btn-reset-filter">
+
+            <i class="bi bi-arrow-clockwise"></i>
+
+        </a>
+
+    </form>
+
+</div>
 
     {{-- TABLE --}}
     <div class="table-section">
@@ -562,20 +659,86 @@ body{
     margin-bottom:0;
 }
 
-/* BUTTON */
-.btn-add{
-    background:#3498ff;
-    color:white;
-    border:none;
-    padding:11px 18px;
-    border-radius:14px;
-    font-weight:600;
-    font-size:14px;
-    transition:0.2s;
+/* FILTER CARD */
+.filter-card{
+    background:white;
+    border-radius:20px;
+    padding:18px;
+    margin-bottom:20px;
+    box-shadow:0 4px 18px rgba(0,0,0,.03);
 }
 
-.btn-add:hover{
-    background:#2388f5;
+.filter-wrapper{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    flex-wrap:wrap;
+}
+
+/* SEARCH */
+.search-box{
+    flex:1;
+    min-width:260px;
+    position:relative;
+}
+
+.search-box i{
+    position:absolute;
+    left:16px;
+    top:50%;
+    transform:translateY(-50%);
+    color:#9ca3af;
+}
+
+.search-box input{
+    width:100%;
+    height:48px;
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+    padding-left:45px;
+    padding-right:16px;
+    font-size:14px;
+    background:#fafafa;
+}
+
+.search-box input:focus{
+    outline:none;
+    border-color:#3498ff;
+    background:white;
+}
+
+/* SELECT */
+.filter-select{
+    min-width:180px;
+    height:48px;
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+    padding:0 14px;
+    background:white;
+    font-size:14px;
+}
+
+.filter-select:focus{
+    outline:none;
+    border-color:#3498ff;
+}
+
+/* RESET */
+.btn-reset-filter{
+    width:48px;
+    height:48px;
+    border-radius:14px;
+    background:#f3f4f6;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#6b7280;
+    text-decoration:none;
+    transition:.2s;
+}
+
+.btn-reset-filter:hover{
+    background:#e5e7eb;
 }
 
 /* TABLE CARD */
@@ -755,7 +918,216 @@ body{
     color:#17a34a;
     font-weight:500;
 }
+/* HEADER */
+.member-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:24px;
+    flex-wrap:wrap;
+    gap:15px;
+}
 
+.header-info h2{
+    font-size:24px;
+    font-weight:700;
+    margin:0;
+    color:#111827;
+}
+
+.header-info p{
+    margin:4px 0 0;
+    color:#98a2b3;
+    font-size:13px;
+}
+
+.header-actions{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+}
+
+/* BUTTON GLOBAL */
+.btn-custom{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    border:none;
+    text-decoration:none;
+    padding:12px 18px;
+    border-radius:14px;
+    font-size:14px;
+    font-weight:600;
+    transition:all .25s ease;
+    cursor:pointer;
+}
+
+.btn-custom i{
+    font-size:15px;
+}
+
+/* EXPORT */
+.btn-export{
+    height: 40px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 12px;
+    background:#ecfdf3;
+    color:#16a34a;
+    border:1px solid #bbf7d0;
+}
+
+.btn-export:hover{
+    background:#16a34a;
+    color:white;
+    transform:translateY(-2px);
+}
+
+/* IMPORT */
+.btn-import{
+    height: 40px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 12px;
+    background:#fff7ed;
+    color:#ea580c;
+    border:1px solid #fed7aa;
+}
+
+.btn-import:hover{
+    background:#ea580c;
+    color:white;
+    transform:translateY(-2px);
+}
+
+/* ADD */
+.btn-add{
+        height: 40px;
+        padding: 0 16px;
+        border: none;
+        border-radius: 12px;
+        background: #2563eb;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        cursor: pointer;
+        transition: background 0.15s;
+}
+
+.btn-add:hover{
+    background:#2388f5;
+    transform:translateY(-2px);
+}
+.btn-template{
+    height: 40px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 12px;
+    background:#f8fafc;
+    color:#475569;
+    border:1px solid #e2e8f0;
+}
+
+.btn-template:hover{
+    background:#475569;
+    color:white;
+    transform:translateY(-2px);
+}
 </style>
 
+<div class="modal fade"
+     id="importModal"
+     tabindex="-1">
+
+    <div class="modal-dialog">
+
+        <div class="modal-content">
+
+            <form action="{{ route('members.import') }}"
+                  method="POST"
+                  enctype="multipart/form-data">
+
+                @csrf
+
+                <div class="modal-header">
+                    <h5>Import Excel</h5>
+                </div>
+
+                <div class="modal-body">
+
+                    <input type="file"
+                           name="file"
+                           class="form-control"
+                           accept=".xlsx,.xls"
+                           required>
+
+                </div>
+
+                <div class="modal-footer">
+
+                    <button type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+
+                        Cancel
+
+                    </button>
+
+                    <button type="submit"
+                            class="btn btn-primary">
+
+                        Import
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const form =
+        document.getElementById('filterForm');
+
+    const searchInput =
+        document.getElementById('searchInput');
+
+    let timer;
+
+    searchInput.addEventListener('keyup', function () {
+
+        clearTimeout(timer);
+
+        timer = setTimeout(function () {
+
+            form.submit();
+
+        }, 500);
+
+    });
+
+    document.querySelectorAll('.auto-filter')
+        .forEach(function(item){
+
+            item.addEventListener('change', function(){
+
+                form.submit();
+
+            });
+
+        });
+
+});
+
+</script>
 @endsection

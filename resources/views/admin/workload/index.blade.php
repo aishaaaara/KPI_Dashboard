@@ -857,18 +857,20 @@
 
 .btn-add-month,
 .btn-add-data{
-    background:#3498ff;
-    color:white;
-    border:none;
-    border-radius:14px;
-    padding:0 20px;
-    height:46px;
-    font-weight:600;
-    font-size:14px;
-    display:flex;
-    align-items:center;
-    gap:8px;
-    transition:0.2s;
+            height: 40px;
+        padding: 0 16px;
+        border: none;
+        border-radius: 12px;
+        background: #2563eb;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        cursor: pointer;
+        transition: background 0.15s;
+}
 }
 
 .btn-add-month:hover,

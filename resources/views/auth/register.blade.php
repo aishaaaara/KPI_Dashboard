@@ -49,11 +49,11 @@
             </div>
         @endif
 
-        {{-- <form action="{{ route('register.store') }}"
-              method="POST"> --}}
+        <form action="{{ route('register.store') }}"
+              method="POST">
 
             @csrf
-
+            
             <div class="mb-2">
 
                 <label class="form-label">

@@ -37,8 +37,8 @@
 
             {{-- DASHBOARD --}}
             <li>
-                <a href="/admin/dashboard"
-                   class="{{ request()->is('admin/dashboard') ? 'active' : '' }}">
+                <a href="/member/dashboard"
+                   class="{{ request()->is('member/dashboard') ? 'active' : '' }}">
 
                     <i class="bi bi-grid-fill"></i>
 
@@ -51,8 +51,8 @@
 
             {{-- MEMBERS --}}
             <li>
-                <a href="/admin/members"
-                   class="{{ request()->is('admin/members*') ? 'active' : '' }}">
+                <a href="/member/members"
+                   class="{{ request()->is('member/members*') ? 'active' : '' }}">
 
                     <i class="bi bi-people-fill"></i>
 
@@ -74,8 +74,8 @@
 
             {{-- COMMUNICATION --}}
             <li>
-                <a href="/admin/communication"
-                   class="{{ request()->is('admin/communication*') ? 'active' : '' }}">
+                <a href="/member/communication"
+                   class="{{ request()->is('member/communication*') ? 'active' : '' }}">
 
                     <i class="bi bi-chat-left-text-fill"></i>
 
@@ -88,8 +88,8 @@
 
             {{-- STORY POINT --}}
             <li>
-                <a href="/admin/story-points"
-                   class="{{ request()->is('admin/story-points*') ? 'active' : '' }}">
+                <a href="/member/story-points"
+                   class="{{ request()->is('member/story-points*') ? 'active' : '' }}">
 
                     <i class="bi bi-journal-text"></i>
 
@@ -102,8 +102,8 @@
 
             {{-- WORKLOAD --}}
             <li>
-                <a href="/admin/workload"
-                   class="{{ request()->is('admin/workload*') ? 'active' : '' }}">
+                <a href="/member/workload"
+                   class="{{ request()->is('member/workload*') ? 'active' : '' }}">
 
                     <i class="bi bi-kanban-fill"></i>
 
@@ -125,8 +125,8 @@
 
             {{-- PERFORMANCE --}}
             <li>
-                <a href="/admin/performance-insight"
-                class="{{ request()->is('admin/performance-insight*') ? 'active' : '' }}">
+                <a href="/member/performance-insight"
+                class="{{ request()->is('member/performance-insight*') ? 'active' : '' }}">
 
                     <i class="bi bi-graph-up-arrow"></i>
 
@@ -136,50 +136,23 @@
 
                 </a>
             </li>
-
-            {{-- APPROVAL --}}
-           <li>
-    <a href="/admin/approvals"
-       class="{{ request()->is('admin/approvals*') ? 'active' : '' }}">
-
-        <i class="bi bi-person-check-fill"></i>
-
-        <span>
-            Approval
-        </span>
-
-    </a>
-</li>
-
         </ul>
 
 </div>
 
 {{-- USER PROFILE --}}
 <div class="sidebar-user">
-
     <div class="user-info">
-
         <div class="user-avatar">
-
             <i class="bi bi-person-circle"></i>
-
         </div>
-
         <div class="user-detail">
-
             <div class="user-name">
-
-                Administrator
-
+                 {{ auth()->user()->name }}
             </div>
-
             <small>
-
-                Admin Access
-
+                Member Access
             </small>
-
         </div>
 
     </div>

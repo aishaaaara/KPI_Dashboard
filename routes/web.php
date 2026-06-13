@@ -1,12 +1,38 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| AUTH CONTROLLERS
+|--------------------------------------------------------------------------
+*/
+
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\RegisterController;
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN CONTROLLERS
+|--------------------------------------------------------------------------
+*/
+
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MemberController;
 use App\Http\Controllers\Admin\CommunicationController;
 use App\Http\Controllers\Admin\StoryPointController;
 use App\Http\Controllers\Admin\WorkloadController;
+use App\Http\Controllers\Admin\PerformanceInsightController;
+use App\Http\Controllers\Admin\ApprovalController;
+
+/*
+|--------------------------------------------------------------------------
+| MEMBER CONTROLLERS
+|--------------------------------------------------------------------------
+*/
+
+use App\Http\Controllers\Member\DashboardController as MemberDashboardController;
+use App\Http\Controllers\Member\PerformanceInsightController as MemberPerformanceInsightController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,109 +40,104 @@ use App\Http\Controllers\Admin\WorkloadController;
 |--------------------------------------------------------------------------
 */
 
-Route::get(
-    '/login',
-    [AuthController::class,'showLogin']
-)->name('login');
-
-Route::post(
-    '/login',
-    [AuthController::class,'login']
-)->name('login.process');
-
-Route::post(
-    '/logout',
-    [AuthController::class,'logout']
-)->name('logout');
-
 Route::redirect('/', '/login');
 
-Route::get('/register', function () {
-    return view('auth.register');
-})->name('register');
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.process');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::get('/forgot-password', function () {
-    return view('auth.forgot-password');
-})->name('forgot.password');
+Route::get('/register', [RegisterController::class, 'create'])->name('register');
+Route::post('/register', [RegisterController::class, 'store'])->name('register.store');
+
+Route::get('/forgot-password', fn() => view('auth.forgot-password'))->name('forgot.password');
+
 /*
 |--------------------------------------------------------------------------
 | ADMIN
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('admin')
+Route::middleware('auth')
+    ->prefix('admin')
     ->group(function () {
-        Route::get(
-            '/dashboard',
-            [DashboardController::class,'index']
-        )->name('dashboard');
-
-        Route::resource(
-            'members',
-            MemberController::class
-        );
-
-        Route::resource(
-            'communication',
-            CommunicationController::class
-        );
-
-        Route::resource(
-            'story-points',
-            StoryPointController::class
-        );
-
-        Route::resource(
-            'workload',
-            WorkloadController::class
-        );
 
         /*
-        |--------------------------------------------------------------------------
+        | DASHBOARD
+        */
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+        /*
+        | MEMBERS
+        */
+        Route::resource('members', MemberController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::get('/members/export',   [MemberController::class, 'export'])->name('members.export');
+        Route::post('/members/import',  [MemberController::class, 'import'])->name('members.import');
+        Route::get('/members/template', [MemberController::class, 'downloadTemplate'])->name('members.template');
+
+        /*
         | COMMUNICATION
-        |--------------------------------------------------------------------------
         */
-
-        Route::post(
-            '/communication/period/store',
-            [CommunicationController::class,'storePeriod']
-        )->name('communication.period.store');
-
-        Route::delete(
-            '/communication/period/delete/{id}',
-            [CommunicationController::class,'destroyPeriod']
-        )->name('communication.period.destroy');
+        Route::resource('communication', CommunicationController::class);
+        Route::post('/communication/period/store',       [CommunicationController::class, 'storePeriod'])->name('communication.period.store');
+        Route::delete('/communication/period/delete/{id}', [CommunicationController::class, 'destroyPeriod'])->name('communication.period.destroy');
 
         /*
-        |--------------------------------------------------------------------------
-        | STORY POINT
-        |--------------------------------------------------------------------------
+        | STORY POINTS
         */
-
-        Route::post(
-            '/story-points/period/store',
-            [StoryPointController::class,'storePeriod']
-        )->name('story-points.period.store');
-
-        Route::delete(
-            '/story-points/period/delete/{id}',
-            [StoryPointController::class,'destroyPeriod']
-        )->name('story-points.period.destroy');
+        Route::resource('story-points', StoryPointController::class);
+        Route::post('/story-points/period/store',       [StoryPointController::class, 'storePeriod'])->name('story-points.period.store');
+        Route::delete('/story-points/period/delete/{id}', [StoryPointController::class, 'destroyPeriod'])->name('story-points.period.destroy');
 
         /*
-        |--------------------------------------------------------------------------
         | WORKLOAD
-        |--------------------------------------------------------------------------
         */
+        Route::resource('workload', WorkloadController::class);
+        Route::post('/workload/period/store',       [WorkloadController::class, 'storePeriod'])->name('workload.period.store');
+        Route::delete('/workload/period/delete/{id}', [WorkloadController::class, 'destroyPeriod'])->name('workload.period.destroy');
 
-        Route::post(
-            '/workload/period/store',
-            [WorkloadController::class,'storePeriod']
-        )->name('workload.period.store');
+        /*
+        | PERFORMANCE INSIGHT
+        */
+        Route::get('/performance-insight',         [PerformanceInsightController::class, 'index'])->name('performance-insight.index');
+        Route::post('/performance-insight/generate', [PerformanceInsightController::class, 'generate'])->name('performance-insight.generate');
+        Route::post('/performance-insight/send',     [PerformanceInsightController::class, 'send'])->name('performance-insight.send');
 
-        Route::delete(
-            '/workload/period/delete/{id}',
-            [WorkloadController::class,'destroyPeriod']
-        )->name('workload.period.destroy');
+        /*
+        | APPROVALS
+        */
+        Route::get('/approvals',              [ApprovalController::class, 'index'])->name('approvals.index');
+        Route::post('/approvals/approve/{id}', [ApprovalController::class, 'approve'])->name('approvals.approve');
+        Route::post('/approvals/reject/{id}',  [ApprovalController::class, 'reject'])->name('approvals.reject');
 
     });
+
+/*
+|--------------------------------------------------------------------------
+| MEMBER
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth')
+    ->prefix('member')
+    ->group(function () {
+
+        /*
+        | DASHBOARD
+        */
+        Route::get('/dashboard', [MemberDashboardController::class, 'index'])->name('member.dashboard');
+
+        /*
+        | MEMBERS
+        */
+        Route::resource('members', \App\Http\Controllers\Member\MemberController::class)->only(['index', 'store']);
+
+        /*
+        | METRICS
+        */
+        Route::resource('communication', \App\Http\Controllers\Member\CommunicationController::class);
+        Route::resource('story-points',  \App\Http\Controllers\Member\StoryPointController::class);
+        Route::resource('workload',      \App\Http\Controllers\Member\WorkloadController::class);
+        Route::get( '/performance-insight', [MemberPerformanceInsightController::class,'index'] )->name('member.performance-insight.index'
+);
+    
+        });

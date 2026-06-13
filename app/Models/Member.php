@@ -9,6 +9,7 @@ class Member extends Model
     protected $fillable = [
 
         'eid',
+        'user_id',
         'name',
         'position_id',
         'team_id',
@@ -32,4 +33,10 @@ class Member extends Model
     {
         return $this->belongsTo(EmploymentType::class);
     }
+
+        public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+    
 }

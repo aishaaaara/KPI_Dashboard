@@ -202,58 +202,21 @@
 
                         {{-- CLARITY --}}
                         <td>
-
-                            <div class="score-box">
-
-                                <div>
-
-                                    <div class="score-percent">
-
-                                        {{ $communication->clarity }}%
-
-                                    </div>
-
-                                    <small class="score-label">
-                                        Clarity
-                                    </small>
-
-                                </div>
-
+                          <div class="score-box">
                                 <div class="score-circle
                                     {{ $communication->clarity >= 90 ? 'green' : ($communication->clarity >= 80 ? 'yellow' : 'red') }}">
-
-                                    {{ $communication->clarity }}
-
+                                    {{ $communication->clarity }}%
                                 </div>
-
                             </div>
 
                         </td>
 
                         {{-- RESPONSIVENESS --}}
-                        <td>
-
-                            <div class="score-box">
-
-                                <div>
-
-                                    <div class="score-percent">
-
-                                        {{ $communication->responsiveness }}%
-
-                                    </div>
-
-                                    <small class="score-label">
-                                        Response
-                                    </small>
-
-                                </div>
-
+                       <td>
+                          <div class="score-box">
                                 <div class="score-circle
                                     {{ $communication->responsiveness >= 90 ? 'green' : ($communication->responsiveness >= 80 ? 'yellow' : 'red') }}">
-
-                                    {{ $communication->responsiveness }}
-
+                                    {{ $communication->responsiveness }}%
                                 </div>
 
                             </div>
@@ -261,53 +224,28 @@
                         </td>
 
                         {{-- COLLABORATION --}}
-                        <td>
-
-                            <div class="score-box">
-
-                                <div>
-
-                                    <div class="score-percent">
-
-                                        {{ $communication->collaboration }}%
-
-                                    </div>
-
-                                    <small class="score-label">
-                                        Teamwork
-                                    </small>
-
-                                </div>
-
+                       <td>
+                          <div class="score-box">
                                 <div class="score-circle
                                     {{ $communication->collaboration >= 90 ? 'green' : ($communication->collaboration >= 80 ? 'yellow' : 'red') }}">
-
-                                    {{ $communication->collaboration }}
-
+                                    {{ $communication->collaboration }}%
                                 </div>
-
                             </div>
 
                         </td>
 
                         {{-- SCORE --}}
-                        <td>
+                      <td class="text-center">
 
-                            <div class="overall-card">
+    <div class="score-badge
+        {{ $communication->overall_score >= 90 ? 'score-good' :
+           ($communication->overall_score >= 80 ? 'score-medium' : 'score-low') }}">
 
-                                <div class="overall-score">
+        {{ number_format($communication->overall_score, 0) }}%
 
-                                    {{ number_format($communication->overall_score, 2) }}%
+    </div>
 
-                                </div>
-
-                                <small>
-                                    Overall Score
-                                </small>
-
-                            </div>
-
-                        </td>
+</td>
 
                         {{-- ACTION --}}
                         <td>
@@ -428,18 +366,6 @@
                                                        name="collaboration"
                                                        class="form-control custom-input"
                                                        value="{{ $communication->collaboration }}">
-
-                                            </div>
-
-                                            <div class="col-md-12">
-
-                                                <label class="form-label">
-                                                    Notes
-                                                </label>
-
-                                                <textarea name="notes"
-                                                          rows="4"
-                                                          class="form-control custom-input textarea-custom">{{ $communication->notes }}</textarea>
 
                                             </div>
 
@@ -900,23 +826,24 @@
 
 .btn-add-month,
 .btn-add-data{
-    background:#3498ff;
-    color:white;
-    border:none;
-    border-radius:14px;
-    padding:0 20px;
-    height:46px;
-    font-weight:600;
-    font-size:14px;
-    display:flex;
-    align-items:center;
-    gap:8px;
-    transition:0.2s;
+            height: 40px;
+        padding: 0 16px;
+        border: none;
+        border-radius: 12px;
+        background: #2563eb;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        cursor: pointer;
+        transition: background 0.15s;
 }
 
 .btn-add-month:hover,
 .btn-add-data:hover{
-    background:#2388f5;
+    background: #1d4ed8;
 }
 
 .period-container{
@@ -1038,7 +965,7 @@
     color:#98a2b3;
     font-size:12px;
     font-weight:700;
-    text-align:left;
+    text-align:center;
 }
 
 .custom-table tbody tr{
@@ -1089,9 +1016,30 @@
 
 .score-box{
     display:flex;
+    flex-direction:column;
     align-items:center;
-    justify-content:space-between;
-    gap:10px;
+    justify-content:center;
+    gap:8px;
+}
+
+.score-circle{
+    width:56px;
+    height:56px;
+    border-radius:50%;
+    border:4px solid;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:16px;
+    font-weight:700;
+    background:#fff;
+}
+
+.score-label{
+    font-size:11px;
+    color:#98a2b3;
+    text-align:center;
+    font-weight:500;
 }
 
 .score-percent{
@@ -1255,7 +1203,28 @@
 .empty-wrapper i{
     font-size:42px;
 }
+.score-badge{
+    min-width:70px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:10px 14px;
+    border-radius:14px;
+    font-size:15px;
+    font-weight:700;
+}
 
+.score-good{
+    color:#16a34a;
+}
+
+.score-medium{
+    color:#d97706;
+}
+
+.score-low{
+    color:#dc2626;
+}
 </style>
 
 @endsection

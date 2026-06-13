@@ -55,7 +55,7 @@ public function store(Request $request)
         'period_id' => $request->period_id,
         'target' => $request->target,
         'totals' => $request->totals,
-        'summary' => $achievement . '%',
+        'summary' => $achievement,
     ]);
 
     return redirect()
