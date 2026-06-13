@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PasswordResetController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -50,14 +52,17 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/register', [RegisterController::class, 'create'])->name('register');
 Route::post('/register', [RegisterController::class, 'store'])->name('register.store');
 
-Route::get('/forgot-password', fn() => view('auth.forgot-password'))->name('forgot.password');
-
+Route::get('/forgot-password',       [PasswordResetController::class, 'showForgot'])->name('forgot.password');
+Route::post('/forgot-password',      [PasswordResetController::class, 'sendResetLink'])->name('password.send-link');
+Route::get('/reset-password/{token}', [PasswordResetController::class, 'showReset'])->name('password.reset.form');
+Route::post('/reset-password',       [PasswordResetController::class, 'resetPassword'])->name('password.reset');
 
 Route::middleware('auth')->group(function () {
     Route::get('/notifications',             [NotificationController::class, 'page'])->name('notifications.index');
     Route::post('/notifications/{id}/read',  [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all',   [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
 });
+
 /*
 |--------------------------------------------------------------------------
 | ADMIN

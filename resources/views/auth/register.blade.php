@@ -129,7 +129,7 @@
             <button type="submit"
                     class="btn-register">
 
-                Masuk
+                Daftar
 
             </button>
 

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Forgot Password</title>
+    <title>Reset Password</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -15,17 +15,9 @@
         {{-- LOGO --}}
         <div class="logo-section">
             <img src="{{ asset('images/cmlabs-logo.png') }}" alt="Logo" class="logo">
-            <h2>Forgot Password</h2>
-            <p>Masukkan email kamu dan kami akan mengirimkan link untuk reset password.</p>
+            <h2>Reset Password</h2>
+            <p>Buat password baru untuk akun kamu.</p>
         </div>
-
-        {{-- ALERT SUCCESS --}}
-        @if (session('success'))
-            <div class="alert-success">
-                <i class="bi bi-check-circle-fill"></i>
-                {{ session('success') }}
-            </div>
-        @endif
 
         {{-- ALERT ERROR --}}
         @if (session('error'))
@@ -36,26 +28,58 @@
         @endif
 
         {{-- FORM --}}
-        <form action="{{ route('password.send-link') }}" method="POST">
+        <form action="{{ route('password.reset') }}" method="POST">
             @csrf
 
-            <div class="mb-4">
+            <input type="hidden" name="token" value="{{ $token }}">
+            <input type="hidden" name="email" value="{{ $email }}">
+
+            {{-- EMAIL (readonly, info saja) --}}
+            <div class="mb-3">
                 <label class="form-label">Email</label>
                 <input
                     type="email"
-                    name="email"
-                    class="form-control custom-input @error('email') is-invalid @enderror"
-                    placeholder="userguest@gmail.com"
-                    value="{{ old('email') }}"
-                    required>
-                @error('email')
-                    <div class="invalid-feedback">{{ $message }}</div>
+                    class="form-control custom-input"
+                    value="{{ $email }}"
+                    disabled>
+            </div>
+
+            {{-- PASSWORD --}}
+            <div class="mb-3">
+                <label class="form-label">Password Baru</label>
+                <div class="password-box">
+                    <input
+                        type="password"
+                        name="password"
+                        id="password"
+                        class="form-control custom-input @error('password') is-invalid @enderror"
+                        placeholder="Min. 6 karakter"
+                        required>
+                    <i class="bi bi-eye-slash toggle-password" data-target="password"></i>
+                </div>
+                @error('password')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
             </div>
 
+            {{-- CONFIRM PASSWORD --}}
+            <div class="mb-4">
+                <label class="form-label">Konfirmasi Password</label>
+                <div class="password-box">
+                    <input
+                        type="password"
+                        name="password_confirmation"
+                        id="confirmPassword"
+                        class="form-control custom-input"
+                        placeholder="Ulangi password baru"
+                        required>
+                    <i class="bi bi-eye-slash toggle-password" data-target="confirmPassword"></i>
+                </div>
+            </div>
+
             <button type="submit" class="btn-submit">
-                <i class="bi bi-send"></i>
-                Kirim Link Reset
+                <i class="bi bi-lock"></i>
+                Reset Password
             </button>
 
         </form>
@@ -110,7 +134,6 @@ body {
     font-size: 13px;
     color: #98a2b3;
     margin: 0;
-    line-height: 1.5;
 }
 
 .form-label {
@@ -129,6 +152,12 @@ body {
     font-size: 14px;
 }
 
+.custom-input:disabled {
+    background: #e9ecef;
+    color: #6b7280;
+    cursor: not-allowed;
+}
+
 .custom-input::placeholder {
     color: #98A2B3;
     opacity: 1;
@@ -137,7 +166,20 @@ body {
 .custom-input:focus {
     background: #F2F4F7;
     box-shadow: none;
-    border-color: #2F9BF3;
+}
+
+.password-box {
+    position: relative;
+}
+
+.password-box i {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    transform: translateY(-50%);
+    color: #98A2B3;
+    font-size: 14px;
+    cursor: pointer;
 }
 
 .btn-submit {
@@ -174,19 +216,6 @@ body {
     font-weight: 600;
 }
 
-.alert-success {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #f0fdf4;
-    color: #15803d;
-    border: 1px solid #bbf7d0;
-    border-radius: 10px;
-    padding: 10px 14px;
-    font-size: 13px;
-    margin-bottom: 16px;
-}
-
 .alert-error {
     display: flex;
     align-items: center;
@@ -200,6 +229,21 @@ body {
     margin-bottom: 16px;
 }
 </style>
+
+<script>
+document.querySelectorAll('.toggle-password').forEach(icon => {
+    icon.addEventListener('click', function () {
+        const input = document.getElementById(this.dataset.target);
+        if (input.type === 'password') {
+            input.type = 'text';
+            this.classList.replace('bi-eye-slash', 'bi-eye');
+        } else {
+            input.type = 'password';
+            this.classList.replace('bi-eye', 'bi-eye-slash');
+        }
+    });
+});
+</script>
 
 </body>
 </html>

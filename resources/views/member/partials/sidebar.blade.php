@@ -141,35 +141,29 @@
 </div>
 
 {{-- USER PROFILE --}}
+{{-- USER PROFILE --}}
 <div class="sidebar-user">
-    <div class="user-info">
+
+    <a href="/member/profile" class="user-info" title="Lihat Profil">
+
         <div class="user-avatar">
             <i class="bi bi-person-circle"></i>
         </div>
+
         <div class="user-detail">
-            <div class="user-name">
-                 {{ auth()->user()->name }}
-            </div>
-            <small>
-                Member Access
-            </small>
+            <div class="user-name">{{ auth()->user()->name }}</div>
+            <small>Member Access</small>
         </div>
 
-    </div>
+    </a>
 
-   <form action="{{ route('logout') }}"
-      method="POST">
+    <form action="{{ route('logout') }}" method="POST">
+        @csrf
+        <button type="submit" class="logout-btn border-0 bg-transparent" title="Logout">
+            <i class="bi bi-box-arrow-right"></i>
+        </button>
+    </form>
 
-    @csrf
-
-    <button type="submit"
-            class="logout-btn border-0 bg-transparent">
-
-        <i class="bi bi-box-arrow-right"></i>
-
-    </button>
-
-</form>
 </div>
 
 </div>
@@ -357,70 +351,100 @@
 }
 
 /* USER CARD */
-.sidebar-user{
-    margin-top:30px;
-    background:white;
-    border-radius:10px;
-    padding:10px 12px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
+.sidebar-user {
+    margin-top: 30px;
+    background: white;
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
 }
 
-/* USER INFO */
-.user-info{
-    display:flex;
-    align-items:center;
-    gap:10px;
+/* USER INFO — sekarang jadi link */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    flex: 1;
+    min-width: 0;
+    border-radius: 8px;
+    padding: 4px 6px;
+    margin: -4px -6px;
+    transition: background .15s;
+}
+
+.user-info:hover {
+    background: #f3f4f6;
 }
 
 /* AVATAR */
-.user-avatar{
-    font-size:32px;
-    color:#9ca3af;
-    line-height:1;
+.user-avatar {
+    font-size: 34px;
+    color: #6b7280;
+    line-height: 1;
+    flex-shrink: 0;
+    transition: color .15s;
+}
+
+.user-info:hover .user-avatar {
+    color: #2563eb;
 }
 
 /* DETAIL */
-.user-detail{
-    display:flex;
-    flex-direction:column;
+.user-detail {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
 }
 
-.user-name{
-    color:#1f2937;
-    font-size:14px;
-    font-weight:600;
+.user-name {
+    color: #1f2937;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.user-detail small{
-    color:#6b7280;
-    font-size:12px;
+.user-detail small {
+    color: #6b7280;
+    font-size: 11px;
 }
 
 /* LOGOUT */
-.logout-btn{
-    color:#6b7280;
-    font-size:22px;
-    transition:.3s;
+.logout-btn {
+    color: #9ca3af;
+    font-size: 20px;
+    transition: .2s;
+    flex-shrink: 0;
+    padding: 4px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.logout-btn:hover{
-    color:#ef4444;
+.logout-btn:hover {
+    color: #ef4444;
+    background: #fef2f2;
 }
 
 /* COLLAPSED */
-.sidebar.collapsed .user-detail{
-    display:none;
+.sidebar.collapsed .user-detail { display: none; }
+
+.sidebar.collapsed .sidebar-user {
+    justify-content: center;
+    padding: 10px;
 }
 
-.sidebar.collapsed .sidebar-user{
-    justify-content:center;
-    padding:10px;
-}
+.sidebar.collapsed .logout-btn { display: none; }
 
-.sidebar.collapsed .logout-btn{
-    display:none;
+.sidebar.collapsed .user-info {
+    margin: 0;
+    padding: 0;
 }
 </style>
 
