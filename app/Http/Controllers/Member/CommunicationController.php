@@ -12,11 +12,13 @@ class CommunicationController extends Controller
 {
     public function index(Request $request)
     {
-        $selectedPeriod = $request->period_id;
+        
 
         $periods = Period::orderBy('year', 'desc')
             ->orderBy('id', 'desc')
             ->get();
+        
+        $selectedPeriod = $request->period_id ?? $periods->first()?->id;
 
         $communications = Communication::with([
                 'member.position',

@@ -12,44 +12,40 @@ use App\Services\NotificationService;
 class CommunicationController extends Controller
 {
     public function index(Request $request)
-    {
-        $selectedPeriod = $request->period_id;
+{
+    $periods = Period::orderBy('year', 'desc')
+        ->orderBy('id', 'desc')
+        ->get();
 
-        $periods = Period::orderBy('year', 'desc')
-            ->orderBy('id', 'desc')
-            ->get();
+    $selectedPeriod = $request->period_id ?? $periods->first()?->id;
 
-        $communications = Communication::with([
-                'member.position',
-                'period'
-            ])
+    // Untuk tabel — difilter by period
+    $communications = Communication::with(['member.position', 'period'])
+        ->when($selectedPeriod, function ($query) use ($selectedPeriod) {
+            $query->where('period_id', $selectedPeriod);
+        })
+        ->latest()
+        ->get();
+        
+    $existingPeriods = Period::select( 'month','year')->get();
 
-            ->when($selectedPeriod, function ($query) use ($selectedPeriod) {
+    // Untuk badge count — semua data tanpa filter
+    $allCommunications = Communication::select('period_id')->get();
 
-                $query->where(
-                    'period_id',
-                    $selectedPeriod
-                );
+    $members = Member::with(['position'])->get();
 
-            })
-
-            ->latest()
-            ->get();
-
-        $members = Member::with([
-            'position'
-        ])->get();
-
-        return view(
-            'admin.communication.index',
-            compact(
-                'communications',
-                'members',
-                'periods',
-                'selectedPeriod'
-            )
-        );
-    }
+    return view(
+        'admin.communication.index',
+        compact(
+            'communications',
+            'allCommunications', // ← tambah ini
+            'members',
+            'periods',
+            'selectedPeriod',
+            'existingPeriods'
+        )
+    );
+}
 
     public function store(Request $request)
     {
@@ -125,22 +121,95 @@ class CommunicationController extends Controller
 
     public function storePeriod(Request $request)
 {
-    $exists = Period::where('month', $request->month)
-        ->where('year', $request->year)
+    $request->validate([
+
+        'month' => 'required',
+
+        'year' => 'required|integer'
+
+    ]);
+
+    
+    $selectedDate = \Carbon\Carbon::createFromDate(
+
+        $request->year,
+
+        date('n', strtotime($request->month)),1
+
+    )->startOfMonth();
+
+    $currentMonth = now()->startOfMonth();
+
+    if ($selectedDate->lt($currentMonth))
+    {
+        return redirect()
+            ->back()
+            ->with(
+                'error',
+                'Cannot add a past period'
+            );
+    }
+
+    $exists = Period::where(
+            'month',
+            $request->month
+        )
+        ->where(
+            'year',
+            $request->year
+        )
         ->exists();
 
-    if (!$exists) {
-        $period = Period::create([
-            'month' => $request->month,
-            'year'  => $request->year,
-        ]);
+    if ($exists)
+    {
+        return redirect()
+            ->back()
+            ->with(
+                'error',
+                'Period already exists'
+            );
+    }
 
-        app(NotificationService::class)->notifyNewCommunicationPeriod(
-            $period->month . ' ' . $period->year
+    $period = Period::create([
+
+        'month' => $request->month,
+
+        'year' => $request->year
+
+    ]);
+
+    $members = Member::all();
+
+    foreach ($members as $member)
+    {
+        Communication::firstOrCreate(
+
+            [
+                'member_id' => $member->id,
+                'period_id' => $period->id,
+            ],
+
+            [
+                'clarity' => 0,
+                'responsiveness' => 0,
+                'collaboration' => 0,
+                'overall_score' => 0,
+                'notes' => null,
+            ]
         );
     }
 
-    return redirect()->back()->with('success', 'New month added successfully');
+    app(NotificationService::class)
+        ->notifyNewCommunicationPeriod(
+            $period->month.' '.$period->year
+        );
+
+    return redirect()
+        ->back()
+        ->with(
+            'success',
+            'New period added successfully'
+        );
 }
 
     public function update(Request $request, $id)

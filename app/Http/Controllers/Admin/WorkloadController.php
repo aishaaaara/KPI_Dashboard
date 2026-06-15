@@ -11,25 +11,23 @@ use App\Services\NotificationService;
 
 class WorkloadController extends Controller
 {
-    public function index(Request $request)
+ 
+public function index(Request $request)
 {
-    $selectedPeriod = $request->period_id;
-
     $periods = Period::latest()->get();
 
-    $workloads = Workload::with([
-        'member.position',
-        'period'
-    ]);
+    $selectedPeriod = $request->period_id ?? $periods->first()?->id;
 
-    if($selectedPeriod){
-        $workloads->where(
-            'period_id',
-            $selectedPeriod
-        );
-    }
+    $workloads = Workload::with(['member.position', 'period'])
+        ->when($selectedPeriod, function ($query) use ($selectedPeriod) {
+            $query->where('period_id', $selectedPeriod);
+        })
+        ->get();
 
-    $workloads = $workloads->get();
+    $existingPeriods = Period::select( 'month','year')->get();
+
+    // Untuk badge count — semua data tanpa filter
+    $allWorkloads = Workload::select('period_id')->get();
 
     $members = Member::with('position')->get();
 
@@ -37,13 +35,14 @@ class WorkloadController extends Controller
         'admin.workload.index',
         compact(
             'workloads',
+            'allWorkloads',
             'members',
             'periods',
-            'selectedPeriod'
+            'selectedPeriod',
+            'existingPeriods'
         )
     );
 }
-
 public function store(Request $request)
 {
     $request->validate([
@@ -127,27 +126,38 @@ public function destroyPeriod($id)
 
 public function storePeriod(Request $request)
 {
-    $request->validate([
-        'period_id' => 'required',
-    ]);
+    $exists = Period::where('month', $request->month)
+        ->where('year', $request->year)
+        ->exists();
 
-    $periodId = $request->period_id;
-    $members  = Member::all();
-
-    foreach ($members as $member) {
-        Workload::create([
-            'member_id' => $member->id,
-            'period_id' => $periodId,
-            'all_task'  => 0,
-            'todo'      => 0,
-            'progress'  => 0,
-            'review'    => 0,
-            'done'      => 0,
+    if (!$exists) {
+        $period = Period::create([
+            'month' => $request->month,
+            'year'  => $request->year,
         ]);
+    } else {
+        $period = Period::where('month', $request->month)
+            ->where('year', $request->year)
+            ->first();
     }
 
-    // Ambil nama periode untuk notifikasi
-    $period = Period::find($periodId);
+    // Auto-create data 0 untuk semua member
+    $members = Member::all();
+    foreach ($members as $member) {
+        Workload::firstOrCreate(
+            [
+                'member_id' => $member->id,
+                'period_id' => $period->id,
+            ],
+            [
+                'all_task' => 0,
+                'todo'     => 0,
+                'progress' => 0,
+                'review'   => 0,
+                'done'     => 0,
+            ]
+        );
+    }
 
     app(NotificationService::class)->notifyNewWorkloadPeriod(
         $period->month . ' ' . $period->year
@@ -155,5 +165,4 @@ public function storePeriod(Request $request)
 
     return redirect()->back()->with('success', 'Workload for the period added successfully');
 }
-
 }

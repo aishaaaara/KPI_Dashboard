@@ -41,14 +41,6 @@
             @endif
         </a>
 
-        <button
-            class="btn-primary"
-            data-bs-toggle="modal"
-            data-bs-target="#addPeriodModal">
-            <i class="bi bi-calendar-plus"></i>
-            Add Month
-        </button>
-
     </div>
 
 </div>

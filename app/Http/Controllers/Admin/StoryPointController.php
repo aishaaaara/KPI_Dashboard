@@ -12,25 +12,23 @@ use App\Services\NotificationService;
 
 class StoryPointController extends Controller
 {
-    public function index(Request $request)
+
+public function index(Request $request)
 {
-    $selectedPeriod = $request->period_id;
     $periods = Period::latest()->get();
-    $storyPoints = StoryPoint::with([
-        'member.position',
-        'period'
-    ])
 
-    ->when($selectedPeriod,function($query) use ($selectedPeriod){
+    $selectedPeriod = $request->period_id ?? $periods->first()?->id;
 
-        $query->where(
-            'period_id',
-            $selectedPeriod
-        );
+    $storyPoints = StoryPoint::with(['member.position', 'period'])
+        ->when($selectedPeriod, function ($query) use ($selectedPeriod) {
+            $query->where('period_id', $selectedPeriod);
+        })
+        ->get();
 
-    })
+    $existingPeriods = Period::select( 'month','year')->get();
 
-    ->get();
+    // Untuk badge count — semua data tanpa filter
+    $allStoryPoints = StoryPoint::select('period_id')->get();
 
     $members = Member::all();
 
@@ -38,9 +36,11 @@ class StoryPointController extends Controller
         'admin.story-points.index',
         compact(
             'storyPoints',
+            'allStoryPoints',
             'members',
             'periods',
-            'selectedPeriod'
+            'selectedPeriod',
+            'existingPeriods'
         )
     );
 }
@@ -78,6 +78,18 @@ public function storePeriod(Request $request)
             'month' => $request->month,
             'year'  => $request->year,
         ]);
+
+        // Auto-create data 0 untuk semua member
+        $members = Member::all();
+        foreach ($members as $member) {
+            StoryPoint::create([
+                'member_id' => $member->id,
+                'period_id' => $period->id,
+                'target'    => 0,
+                'totals'    => 0,
+                'summary'   => 0,
+            ]);
+        }
 
         app(NotificationService::class)->notifyNewStoryPointPeriod(
             $period->month . ' ' . $period->year

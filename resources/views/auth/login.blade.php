@@ -51,7 +51,7 @@
         <div class="mb-2">
 
             <label class="form-label">
-                Username or Email
+                Email
             </label>
 
             <input type="email"

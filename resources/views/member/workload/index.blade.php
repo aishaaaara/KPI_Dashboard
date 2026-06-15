@@ -338,11 +338,13 @@
     margin-bottom:24px;
 }
 
-.period-wrapper{
-    display:flex;
-    gap:14px;
-    overflow-x:auto;
-    padding-bottom:4px;
+.period-wrapper {
+    display: flex;
+    flex-direction: row-reverse;  /* ← tambah ini */
+    gap: 14px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    justify-content: flex-end;   /* ← supaya mulai dari kiri */
 }
 
 .period-card{

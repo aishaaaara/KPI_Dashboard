@@ -13,9 +13,9 @@ class WorkloadController extends Controller
 {
     public function index(Request $request)
 {
-    $selectedPeriod = $request->period_id;
 
     $periods = Period::latest()->get();
+    $selectedPeriod = $request->period_id ?? $periods->first()?->id;
 
     $workloads = Workload::with([
         'member.position',

@@ -36,6 +36,7 @@ use App\Http\Controllers\Admin\ApprovalController;
 
 use App\Http\Controllers\Member\DashboardController as MemberDashboardController;
 use App\Http\Controllers\Member\PerformanceInsightController as MemberPerformanceInsightController;
+use App\Http\Controllers\Member\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -150,6 +151,12 @@ Route::middleware(['auth', 'role:member'])
         Route::resource('story-points',  \App\Http\Controllers\Member\StoryPointController::class);
         Route::resource('workload',      \App\Http\Controllers\Member\WorkloadController::class);
         Route::get( '/performance-insight', [MemberPerformanceInsightController::class,'index'] )->name('member.performance-insight.index'
-);
-    
+        );
+
+        /*
+        | PROFILE
+        */
+        Route::get('/profile', [\App\Http\Controllers\Member\ProfileController::class, 'index'])->name('member.profile');
+        Route::put('/profile', [\App\Http\Controllers\Member\ProfileController::class, 'update'])->name('member.profile.update');
+            
         });

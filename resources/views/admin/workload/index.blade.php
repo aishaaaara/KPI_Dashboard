@@ -62,10 +62,7 @@
 
                 @php
 
-                    $totalData =
-                        $workloads
-                        ->where('period_id', $period->id)
-                        ->count();
+                    $totalData = $allWorkloads->where('period_id', $period->id)->count();
 
                 @endphp
 
@@ -458,130 +455,63 @@
 
         <div class="modal-content custom-modal">
 
-            <form action="{{ route('story-points.period.store') }}"
-                  method="POST">
+<form action="{{ route('communication.period.store') }}"
+      method="POST">
 
-                @csrf
+    @csrf
 
-                <div class="modal-header border-0">
+    {{-- MONTH --}}
+    <div class="mb-3">
 
-                    <div>
+        <label class="form-label">
+            Month
+        </label>
 
-                        <h4 class="fw-bold">
-                            Add New Month
-                        </h4>
+        <select
+            id="monthSelect"
+            name="month"
+            class="form-select"
+            required>
 
-                        <small class="text-muted">
-                            Select period for communication data
-                        </small>
+        </select>
 
-                    </div>
+    </div>
 
-                    <button type="button"
-                            class="btn-close"
-                            data-bs-dismiss="modal">
-                    </button>
+    {{-- YEAR --}}
+    <div class="mb-3">
 
-                </div>
+        <label class="form-label">
+            Year
+        </label>
 
-                <div class="modal-body">
+        <select
+            id="yearSelect"
+            name="year"
+            class="form-select"
+            required>
 
-                    <div class="mb-3">
+            @for(
+                $year = now()->year;
+                $year <= now()->year + 5;
+                $year++
+            )
 
-                        <label class="form-label">
-                            Select Month
-                        </label>
+                <option value="{{ $year }}">
+                    {{ $year }}
+                </option>
 
-                        <select name="period"
-                                class="form-select custom-input"
-                                id="periodSelect">
+            @endfor
 
-                            @php
+        </select>
 
-                                $existingPeriods =
-                                    $periods
-                                    ->map(function($item){
+    </div>
 
-                                        return
-                                            strtolower($item->month)
-                                            .
-                                            '-'
-                                            .
-                                            $item->year;
+    <button type="submit"
+            class="btn btn-primary">
+        Save
+    </button>
 
-                                    })
-                                    ->toArray();
-
-                            @endphp
-
-                            @for($i = 0; $i < 6; $i++)
-
-                                @php
-
-                                    $date =
-                                        now()->addMonths($i);
-
-                                    $monthName =
-                                        $date->format('F');
-
-                                    $year =
-                                        $date->format('Y');
-
-                                    $periodKey =
-                                        strtolower($monthName)
-                                        .
-                                        '-'
-                                        .
-                                        $year;
-
-                                @endphp
-
-                                @if(!in_array($periodKey, $existingPeriods))
-
-                                    <option value="{{ $monthName }}|{{ $year }}">
-
-                                        {{ $monthName }} {{ $year }}
-
-                                    </option>
-
-                                @endif
-
-                            @endfor
-
-                        </select>
-
-                    </div>
-
-                    <input type="hidden"
-                           name="month"
-                           id="monthInput">
-
-                    <input type="hidden"
-                           name="year"
-                           id="yearInput">
-
-                </div>
-
-                <div class="modal-footer border-0">
-
-                    <button type="button"
-                            class="btn-cancel"
-                            data-bs-dismiss="modal">
-
-                        Cancel
-
-                    </button>
-
-                    <button type="submit"
-                            class="btn-save">
-
-                        Save Month
-
-                    </button>
-
-                </div>
-
-            </form>
+</form>
 
         </div>
 
@@ -787,39 +717,109 @@
 {{-- SCRIPT --}}
 <script>
 
-    const periodSelect =
-        document.getElementById('periodSelect');
+const currentYear =
+    {{ now()->year }};
 
-    const monthInput =
-        document.getElementById('monthInput');
+const currentMonth =
+    {{ now()->month }};
 
-    const yearInput =
-        document.getElementById('yearInput');
+const months = [
 
-    function setPeriodValue(){
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December'
 
-        if(periodSelect){
+];
 
-            const value =
-                periodSelect.value.split('|');
+const existingPeriods =
+@json(
+    $existingPeriods->map(function($period){
 
-            monthInput.value =
-                value[0];
+        return [
 
-            yearInput.value =
-                value[1];
-        }
-    }
+            'month' => $period->month,
 
-    setPeriodValue();
+            'year' => $period->year
 
-    if(periodSelect){
+        ];
 
-        periodSelect.addEventListener(
-            'change',
-            setPeriodValue
+    })
+);
+
+function loadMonths()
+{
+    const selectedYear =
+        parseInt(
+            document
+                .getElementById('yearSelect')
+                .value
         );
-    }
+
+    const monthSelect =
+        document.getElementById(
+            'monthSelect'
+        );
+
+    monthSelect.innerHTML =
+        '<option value="">Select Month</option>';
+
+    months.forEach((month,index)=>{
+
+        const monthNumber =
+            index + 1;
+
+        const isPastMonth =
+
+            selectedYear === currentYear
+            &&
+            monthNumber < currentMonth;
+
+        const alreadyExists =
+            existingPeriods.some(period =>
+
+                period.month === month
+                &&
+                parseInt(period.year)
+                    === selectedYear
+
+            );
+
+        if(
+            !isPastMonth
+            &&
+            !alreadyExists
+        ){
+
+            monthSelect.innerHTML +=
+                `
+                <option value="${month}">
+                    ${month}
+                </option>
+                `;
+
+        }
+
+    });
+
+}
+
+document
+    .getElementById('yearSelect')
+    .addEventListener(
+        'change',
+        loadMonths
+    );
+
+loadMonths();
 
 </script>
 
@@ -882,11 +882,13 @@
     margin-bottom:24px;
 }
 
-.period-wrapper{
-    display:flex;
-    gap:14px;
-    overflow-x:auto;
-    padding-bottom:4px;
+.period-wrapper {
+    display: flex;
+    flex-direction: row-reverse;  /* ← tambah ini */
+    gap: 14px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    justify-content: flex-end;   /* ← supaya mulai dari kiri */
 }
 
 .period-card{
