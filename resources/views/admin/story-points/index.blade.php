@@ -53,84 +53,56 @@
 
     </div>
 
-    {{-- PERIOD FILTER --}}
-    <div class="period-container">
+{{-- PERIOD FILTER --}}
+<div class="period-container">
 
-        <div class="period-wrapper">
+    <button class="period-nav" id="scrollLeft" onclick="scrollPeriod(-1)">
+        <i class="bi bi-chevron-left"></i>
+    </button>
 
-            @foreach($periods as $period)
+    <div class="period-wrapper" id="periodWrapper">
+        @foreach($periods as $period)
+            @php
+                $totalData = $storyPointCounts[$period->id] ?? 0;
+            @endphp
 
-                @php
+            <div class="period-card {{ $selectedPeriod == $period->id ? 'active-period' : '' }}"
+                 id="period-{{ $period->id }}">
 
-                $totalData = $allStoryPoints->where('period_id', $period->id)->count();
-
-                @endphp
-
-                <div class="period-card
-                    {{ $selectedPeriod == $period->id ? 'active-period' : '' }}">
-
-                    <a href="?period_id={{ $period->id }}"
-                       class="period-link">
-
-                        <div class="period-left">
-
-                            <div class="period-icon">
-                                <i class="bi bi-calendar-event"></i>
-                            </div>
-
-                            <div>
-
-                                <span class="period-month">
-
-                                    {{ substr($period->month,0,3) }}
-                                    {{ $period->year }}
-
-                                </span>
-
-                                <small class="period-subtitle">
-
-                                    Story Point Period
-                                </small>
-
-                            </div>
-
+                <a href="?period_id={{ $period->id }}" class="period-link">
+                    <div class="period-left">
+                        <div class="period-icon">
+                            <i class="bi bi-calendar-event"></i>
                         </div>
-
-                    </a>
-
-                    <div class="period-right">
-
-                        <span class="period-total">
-
-                            {{ $totalData }}
-
-                        </span>
-
-                        <form action="{{ route('story-points.period.destroy', $period->id) }}"
-                              method="POST">
-
-                            @csrf
-                            @method('DELETE')
-
-                            <button class="btn-delete-period"
-                                    type="submit"
-                                    onclick="return confirm('Delete this month and all story point data?')">
-
-                                <i class="bi bi-trash3"></i>
-
-                            </button>
-
-                        </form>
-
+                        <div>
+                            <span class="period-month">
+                                {{ substr($period->month, 0, 3) }} {{ $period->year }}
+                            </span>
+                        </div>
                     </div>
+                </a>
 
+                <div class="period-right">
+                    <span class="period-total">{{ $totalData }}</span>
+                    <form action="{{ route('communication.period.destroy', $period->id) }}" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <button class="btn-delete-period" type="submit"
+                                onclick="return confirm('Delete this period?')">
+                            <i class="bi bi-trash3"></i>
+                        </button>
+                    </form>
                 </div>
 
-            @endforeach
-
-        </div>
-
+            </div>
+        @endforeach
     </div>
+
+    <button class="period-nav" id="scrollRight" onclick="scrollPeriod(1)">
+        <i class="bi bi-chevron-right"></i>
+    </button>
+
+</div>
 
     {{-- TABLE --}}
     <div class="table-section">
@@ -438,7 +410,7 @@
 
         <div class="modal-content custom-modal">
 
-<form action="{{ route('communication.period.store') }}"
+<form action="{{ route('story-points.period.store') }}"
       method="POST">
 
     @csrf
@@ -781,6 +753,25 @@ document
 
 loadMonths();
 
+
+//periode
+        function scrollPeriod(direction) {
+            const wrapper = document.getElementById('periodWrapper');
+            // row-reverse jadi arah scroll dibalik
+            wrapper.scrollBy({ left: direction * -220, behavior: 'smooth' });
+        }
+
+        // Auto-scroll ke period yang aktif saat halaman load
+        document.addEventListener('DOMContentLoaded', function () {
+            const active = document.querySelector('.active-period');
+            const wrapper = document.getElementById('periodWrapper');
+            if (active && wrapper) {
+                // Hitung posisi dalam row-reverse
+                const wrapperRight = wrapper.getBoundingClientRect().right;
+                const activeRight  = active.getBoundingClientRect().right;
+                wrapper.scrollLeft -= (wrapperRight - activeRight) - wrapper.offsetWidth / 2;
+            }
+        });
 </script>
 
 <style>
@@ -838,17 +829,58 @@ loadMonths();
     background:#2388f5;
 }
 
-.period-container{
-    margin-bottom:24px;
+.period-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 24px;
 }
 
 .period-wrapper {
     display: flex;
-    flex-direction: row-reverse;  /* ← tambah ini */
+    flex-direction: row-reverse;
     gap: 14px;
     overflow-x: auto;
     padding-bottom: 4px;
-    justify-content: flex-end;   /* ← supaya mulai dari kiri */
+    justify-content: flex-end;
+    scroll-behavior: smooth;
+
+    /* Sembunyikan scrollbar tapi tetap bisa scroll */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    flex: 1;
+}
+
+.period-wrapper::-webkit-scrollbar {
+    display: none;
+}
+
+/* Tombol navigasi */
+.period-nav {
+    width: 36px;
+    height: 36px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fff;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background .15s, border-color .15s;
+    font-size: 14px;
+}
+
+.period-nav:hover {
+    background: #f3f4f6;
+    border-color: #2563eb;
+    color: #2563eb;
+}
+
+.period-nav:disabled {
+    opacity: .4;
+    cursor: not-allowed;
 }
 .period-card{
     min-width:210px;
@@ -911,6 +943,7 @@ loadMonths();
     font-size:11px;
     font-weight:700;
     color:#6b7280;
+    margin-left: 8px;
 }
 
 .active-period{

@@ -27,8 +27,9 @@ public function index(Request $request)
 
     $existingPeriods = Period::select( 'month','year')->get();
 
-    // Untuk badge count — semua data tanpa filter
-    $allStoryPoints = StoryPoint::select('period_id')->get();
+     $storyPointCounts = StoryPoint::selectRaw('period_id, count(*) as total')
+    ->groupBy('period_id')
+    ->pluck('total', 'period_id'); // hasil: [period_id => total]
 
     $members = Member::all();
 
@@ -36,7 +37,7 @@ public function index(Request $request)
         'admin.story-points.index',
         compact(
             'storyPoints',
-            'allStoryPoints',
+            'storyPointCounts',
             'members',
             'periods',
             'selectedPeriod',
@@ -69,34 +70,62 @@ public function store(Request $request)
 
 public function storePeriod(Request $request)
 {
+    $request->validate([
+        'month' => 'required',
+        'year'  => 'required|integer',
+    ]);
+
+    $selectedDate = \Carbon\Carbon::createFromDate(
+        $request->year,
+        date('n', strtotime($request->month)),
+        1
+    )->startOfMonth();
+
+    if ($selectedDate->lt(now()->startOfMonth())) {
+        return redirect()->back()->with('error', 'Cannot add a past period');
+    }
+
     $exists = Period::where('month', $request->month)
         ->where('year', $request->year)
         ->exists();
 
-    if (!$exists) {
-        $period = Period::create([
-            'month' => $request->month,
-            'year'  => $request->year,
-        ]);
+    if ($exists) {
+        return redirect()->back()->with('error', 'Period already exists');
+    }
 
-        // Auto-create data 0 untuk semua member
-        $members = Member::all();
-        foreach ($members as $member) {
-            StoryPoint::create([
-                'member_id' => $member->id,
-                'period_id' => $period->id,
-                'target'    => 0,
-                'totals'    => 0,
-                'summary'   => 0,
-            ]);
-        }
+    $period  = Period::create([
+        'month' => $request->month,
+        'year'  => $request->year,
+    ]);
 
-        app(NotificationService::class)->notifyNewStoryPointPeriod(
-            $period->month . ' ' . $period->year
+    $members = Member::all();
+
+    foreach ($members as $member) {
+
+        // Communication
+        \App\Models\Communication::firstOrCreate(
+            ['member_id' => $member->id, 'period_id' => $period->id],
+            ['clarity' => 0, 'responsiveness' => 0, 'collaboration' => 0, 'overall_score' => 0, 'notes' => null]
+        );
+
+        // Story Point
+        \App\Models\StoryPoint::firstOrCreate(
+            ['member_id' => $member->id, 'period_id' => $period->id],
+            ['target' => 0, 'totals' => 0, 'summary' => 0]
+        );
+
+        // Workload
+        \App\Models\Workload::firstOrCreate(
+            ['member_id' => $member->id, 'period_id' => $period->id],
+            ['all_task' => 0, 'todo' => 0, 'progress' => 0, 'review' => 0, 'done' => 0]
         );
     }
 
-    return redirect()->back()->with('success', 'New month added successfully');
+    app(NotificationService::class)->notifyNewStoryPointPeriod(
+        $period->month . ' ' . $period->year
+    );
+
+    return redirect()->back()->with('success', 'New period added successfully');
 }
     
 public function update(Request $request,$id)

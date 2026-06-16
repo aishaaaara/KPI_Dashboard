@@ -26,8 +26,9 @@ public function index(Request $request)
 
     $existingPeriods = Period::select( 'month','year')->get();
 
-    // Untuk badge count — semua data tanpa filter
-    $allWorkloads = Workload::select('period_id')->get();
+    $workloadCounts = Workload::selectRaw('period_id, count(*) as total')
+    ->groupBy('period_id')
+    ->pluck('total', 'period_id'); // hasil: [period_id => total]
 
     $members = Member::with('position')->get();
 
@@ -35,7 +36,7 @@ public function index(Request $request)
         'admin.workload.index',
         compact(
             'workloads',
-            'allWorkloads',
+            'workloadCounts',
             'members',
             'periods',
             'selectedPeriod',
@@ -126,36 +127,54 @@ public function destroyPeriod($id)
 
 public function storePeriod(Request $request)
 {
+    $request->validate([
+        'month' => 'required',
+        'year'  => 'required|integer',
+    ]);
+
+    $selectedDate = \Carbon\Carbon::createFromDate(
+        $request->year,
+        date('n', strtotime($request->month)),
+        1
+    )->startOfMonth();
+
+    if ($selectedDate->lt(now()->startOfMonth())) {
+        return redirect()->back()->with('error', 'Cannot add a past period');
+    }
+
     $exists = Period::where('month', $request->month)
         ->where('year', $request->year)
         ->exists();
 
-    if (!$exists) {
-        $period = Period::create([
-            'month' => $request->month,
-            'year'  => $request->year,
-        ]);
-    } else {
-        $period = Period::where('month', $request->month)
-            ->where('year', $request->year)
-            ->first();
+    if ($exists) {
+        return redirect()->back()->with('error', 'Period already exists');
     }
 
-    // Auto-create data 0 untuk semua member
+    $period  = Period::create([
+        'month' => $request->month,
+        'year'  => $request->year,
+    ]);
+
     $members = Member::all();
+
     foreach ($members as $member) {
-        Workload::firstOrCreate(
-            [
-                'member_id' => $member->id,
-                'period_id' => $period->id,
-            ],
-            [
-                'all_task' => 0,
-                'todo'     => 0,
-                'progress' => 0,
-                'review'   => 0,
-                'done'     => 0,
-            ]
+
+        // Communication
+        \App\Models\Communication::firstOrCreate(
+            ['member_id' => $member->id, 'period_id' => $period->id],
+            ['clarity' => 0, 'responsiveness' => 0, 'collaboration' => 0, 'overall_score' => 0, 'notes' => null]
+        );
+
+        // Story Point
+        \App\Models\StoryPoint::firstOrCreate(
+            ['member_id' => $member->id, 'period_id' => $period->id],
+            ['target' => 0, 'totals' => 0, 'summary' => 0]
+        );
+
+        // Workload
+        \App\Models\Workload::firstOrCreate(
+            ['member_id' => $member->id, 'period_id' => $period->id],
+            ['all_task' => 0, 'todo' => 0, 'progress' => 0, 'review' => 0, 'done' => 0]
         );
     }
 
@@ -163,6 +182,6 @@ public function storePeriod(Request $request)
         $period->month . ' ' . $period->year
     );
 
-    return redirect()->back()->with('success', 'Workload for the period added successfully');
+    return redirect()->back()->with('success', 'New period added successfully');
 }
 }

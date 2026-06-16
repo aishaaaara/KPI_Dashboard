@@ -31,18 +31,11 @@
     {{-- PERIOD FILTER --}}
     <div class="period-container">
 
-        <div class="period-wrapper">
-
-            @foreach($periods as $period)
-
-                @php
-
-                    $totalData =
-                        $communications
-                        ->where('period_id', $period->id)
-                        ->count();
-
-                @endphp
+        <div class="period-wrapper" id="periodWrapper">
+                @foreach($periods as $period)
+                    @php
+                        $totalData = $communicationCounts[$period->id] ?? 0;
+                    @endphp
 
                 <div class="period-card
                     {{ $selectedPeriod == $period->id ? 'active-period' : '' }}">
@@ -64,13 +57,6 @@
                                     {{ $period->year }}
 
                                 </span>
-
-                                <small class="period-subtitle">
-
-                                    Communication Period
-
-                                </small>
-
                             </div>
 
                         </div>
@@ -196,15 +182,15 @@
                         {{-- SCORE --}}
                       <td class="text-center">
 
-    <div class="score-badge
-        {{ $communication->overall_score >= 90 ? 'score-good' :
-           ($communication->overall_score >= 80 ? 'score-medium' : 'score-low') }}">
+                <div class="score-badge
+                    {{ $communication->overall_score >= 90 ? 'score-good' :
+                    ($communication->overall_score >= 80 ? 'score-medium' : 'score-low') }}">
 
-        {{ number_format($communication->overall_score, 0) }}%
+                    {{ number_format($communication->overall_score, 0) }}%
 
-    </div>
+                </div>
 
-</td>
+            </td>
 
                     @empty
 
@@ -407,6 +393,7 @@
     font-size:11px;
     font-weight:700;
     color:#6b7280;
+    margin-left: 8px;
 }
 
 .active-period{

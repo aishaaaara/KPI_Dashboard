@@ -16,59 +16,47 @@ class PerformanceInsightController extends Controller
 {
     public function index(Request $request)
 {
-    $selectedPeriod = $request->period_id;
-
     $periods = Period::latest()->get();
+
+    // Auto-select periode terbaru kalau belum ada pilihan
+    $selectedPeriod = $request->period_id ?? optional($periods->first())->id;
 
     $insights = PerformanceInsight::with([
         'member.position',
         'period'
     ])
-
+    ->whereHas('member') // hindari member null
     ->when($selectedPeriod, function ($query) use ($selectedPeriod) {
-
-        $query->where(
-            'period_id',
-            $selectedPeriod
-        );
-
+        $query->where('period_id', $selectedPeriod);
     })
-
-    ->get();
-
-    /*
-    |--------------------------------------------------------------------------
-    | Ambil workload untuk task summary
-    |--------------------------------------------------------------------------
-    */
+    // Deduplikasi: ambil 1 record terbaru per member
+    ->get()
+    ->unique('member_id');
 
     foreach ($insights as $insight) {
-
-        $insight->workloadData = Workload::where(
-            'member_id',
-            $insight->member_id
-        )
-        ->where(
-            'period_id',
-            $insight->period_id
-        )
-        ->first();
-
+        $insight->workloadData = Workload::where('member_id', $insight->member_id)
+            ->where('period_id', $insight->period_id)
+            ->first();
     }
 
     return view(
         'admin.performance-insight.index',
-        compact(
-            'insights',
-            'periods',
-            'selectedPeriod'
-        )
+        compact('insights', 'periods', 'selectedPeriod')
     );
 }
 
     public function generate(Request $request)
     {
         $periodId = $request->period_id;
+            // Cegah regenerate kalau ada insight yang sudah dikirim di periode ini
+        $alreadySent = PerformanceInsight::where('period_id', $periodId)
+            ->where('is_sent', 1)
+            ->exists();
+            if ($alreadySent) {
+        return redirect()
+            ->route('performance-insight.index', ['period_id' => $periodId])
+            ->with('error', 'Tidak bisa generate ulang — sebagian insight di periode ini sudah dikirim ke member');
+    }
 
         PerformanceInsight::where(
             'period_id',
@@ -183,11 +171,8 @@ class PerformanceInsightController extends Controller
         }
 
         return redirect()
-            ->back()
-            ->with(
-                'success',
-                'Performance Insight berhasil digenerate'
-            );
+        ->route('performance-insight.index', ['period_id' => $periodId]) // ← ganti ini
+        ->with('success', 'Performance Insight berhasil digenerate');
     }
 
     public function send(Request $request)
@@ -196,7 +181,12 @@ class PerformanceInsightController extends Controller
 
     $insights = PerformanceInsight::with(['member.user', 'period'])
         ->whereIn('id', $ids)
+        ->where('is_sent', 0) // ← hanya yang belum dikirim
         ->get();
+
+    if ($insights->isEmpty()) {
+        return redirect()->back()->with('error', 'Semua insight yang dipilih sudah pernah dikirim');
+    }
 
     foreach ($insights as $insight) {
         $insight->update([
@@ -205,7 +195,6 @@ class PerformanceInsightController extends Controller
             'admin_notes' => $request->admin_notes,
         ]);
 
-        // Notifikasi ke member yang bersangkutan
         app(NotificationService::class)->notifyPerformanceInsightSent(
             $insight->member->user_id,
             $insight->period->month . ' ' . $insight->period->year
@@ -214,4 +203,6 @@ class PerformanceInsightController extends Controller
 
     return redirect()->back()->with('success', 'Insight berhasil dikirim');
 }
+
+
 }

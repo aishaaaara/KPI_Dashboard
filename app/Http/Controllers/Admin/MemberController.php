@@ -91,7 +91,7 @@ class MemberController extends Controller
         ]);
 
         return redirect()
-            ->route('members.index');
+            ->to('/admin/members');
     }
 
    public function update(Request $request, $id)
@@ -119,7 +119,7 @@ class MemberController extends Controller
     ]);
 
     return redirect()
-        ->route('members.index')
+        ->to('/admin/members')
         ->with('success', 'Member berhasil diupdate');
 }
     public function destroy($id)
@@ -129,7 +129,7 @@ class MemberController extends Controller
         $member->delete();
 
         return redirect()
-            ->route('members.index')
+            ->to('/admin/members')
             ->with('success', 'Member berhasil dihapus');
     }
 
@@ -137,7 +137,7 @@ class MemberController extends Controller
 {
     return Excel::download(
         new MembersExport,
-        'members.xlsx'
+        'Data Members Developer.xlsx'
     );
 }
 
@@ -153,7 +153,7 @@ public function import(Request $request)
     );
 
     return redirect()
-        ->route('members.index')
+        ->to('/admin/members')
         ->with('success', 'Data berhasil diimport');
 }
 

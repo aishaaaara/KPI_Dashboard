@@ -39,23 +39,27 @@
 
         </select>
 
-        <button type="submit" class="btn-generate">
+        @php
+            $periodLocked = $insights->isNotEmpty() && $insights->every(fn($i) => $i->is_sent);
+        @endphp
+
+        <button type="submit" class="btn-generate" {{ $periodLocked ? 'disabled' : '' }}>
             <i class="bi bi-lightning-charge-fill"></i>
             Generate
         </button>
 
     </form>
 
-    {{-- Period filter (GET) for display only --}}
-    <form method="GET" id="filter-form" style="display:none">
-        <select name="period_id" onchange="this.form.submit()">
-            @foreach ($periods as $period)
-                <option value="{{ $period->id }}" {{ $selectedPeriod == $period->id ? 'selected' : '' }}>
-                    {{ $period->month }} {{ $period->year }}
-                </option>
-            @endforeach
-        </select>
-    </form>
+        {{-- Period filter (GET) for display only --}}
+        <form method="GET" id="filter-form" style="display:none">
+            <select name="period_id" onchange="this.form.submit()">
+                @foreach ($periods as $period)
+                    <option value="{{ $period->id }}" {{ $selectedPeriod == $period->id ? 'selected' : '' }}>
+                        {{ $period->month }} {{ $period->year }}
+                    </option>
+                @endforeach
+            </select>
+        </form>
 
 </div>
 
@@ -206,8 +210,8 @@
                         <div class="m-avatar">{{ $initials }}</div>
 
                         <div class="m-info">
-                            <div class="m-name">{{ $insight->member->name }}</div>
-                            <div class="m-pos">{{ $insight->member->position->name }}</div>
+                            <div class="m-name">{{ $insight->member?->name ?? 'Unknown' }}</div>
+                            <div class="m-pos">{{ $insight->member->position?->name ?? '-' }}</div>
                         </div>
 
                         <div class="m-meta">

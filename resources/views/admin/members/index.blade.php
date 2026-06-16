@@ -25,14 +25,14 @@
     <div class="header-actions">
 
         {{-- TEMPLATE --}}
-        <a href="{{ route('members.template') }}"
+        <a href="{{ route('admin.members.template') }}"
            class="btn-custom btn-template">
             <i class="bi bi-file-earmark-excel"></i>
             Template
         </a>
 
         {{-- EXPORT --}}
-        <a href="{{ route('members.export') }}"
+        <a href="{{ route('admin.members.export') }}"
            class="btn-custom btn-export">
             <i class="bi bi-download"></i>
             Export
@@ -64,7 +64,7 @@
 <div class="filter-card">
 
     <form method="GET"
-          action="{{ route('members.index') }}"
+          action="{{ route('admin.members.index') }}"
           id="filterForm"
           class="filter-wrapper">
 
@@ -123,7 +123,7 @@
 
         </select>
 
-        <a href="{{ route('members.index') }}"
+        <a href="{{ route('admin.members.index') }}"
            class="btn-reset-filter">
 
             <i class="bi bi-arrow-clockwise"></i>
@@ -239,21 +239,20 @@
 
                                 </button>
 
-                                {{-- DELETE --}}
-                                <form action="{{ route('members.destroy', $member->id) }}"
-                                      method="POST">
+                            {{-- DELETE --}}
+                            <button class="btn-action btn-delete"
+                                    onclick="confirmDelete({{ $member->id }}, '{{ $member->name }}')">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
 
-                                    @csrf
-                                    @method('DELETE')
-
-                                    <button class="btn-action btn-delete"
-                                            onclick="return confirm('Yakin hapus data?')">
-
-                                        <i class="bi bi-trash-fill"></i>
-
-                                    </button>
-
-                                </form>
+                            {{-- Form delete — hidden, tidak perlu di dalam loop lagi --}}
+                            <form id="deleteForm-{{ $member->id }}"
+                                action="{{ route('admin.members.destroy', $member->id) }}"
+                                method="POST"
+                                style="display:none">
+                                @csrf
+                                @method('DELETE')
+                            </form>
 
                             </div>
 
@@ -291,7 +290,7 @@
 
                                 </div>
 
-                                <form action="{{ route('members.update', $member->id) }}"
+                                <form action="{{ route('admin.members.update', $member->id) }}"
                                       method="POST">
 
                                     @csrf
@@ -492,7 +491,7 @@
 
             </div>
 
-            <form action="{{ route('members.store') }}"
+            <form action="{{ route('admin.members.store') }}"
                   method="POST">
 
                 @csrf
@@ -1036,6 +1035,80 @@ body{
     color:white;
     transform:translateY(-2px);
 }
+/* ----- Delete Modal ----- */
+.delete-icon-wrap {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #fef2f2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    border: 6px solid #fee2e2;
+}
+
+.delete-icon-wrap i {
+    font-size: 30px;
+    color: #ef4444;
+}
+
+.delete-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 10px;
+}
+
+.delete-msg {
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.7;
+    margin-bottom: 28px;
+}
+
+.delete-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.btn-del-cancel {
+    height: 42px;
+    padding: 0 24px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #fff;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+}
+
+.btn-del-cancel:hover {
+    background: #f3f4f6;
+}
+
+.btn-del-confirm {
+    height: 42px;
+    padding: 0 24px;
+    border: none;
+    border-radius: 12px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    transition: background .15s;
+}
+
+.btn-del-confirm:hover {
+    background: #dc2626;
+}
 </style>
 
 <div class="modal fade"
@@ -1046,7 +1119,7 @@ body{
 
         <div class="modal-content">
 
-            <form action="{{ route('members.import') }}"
+            <form action="{{ route('admin.members.import') }}"
                   method="POST"
                   enctype="multipart/form-data">
 
@@ -1092,6 +1165,51 @@ body{
     </div>
 
 </div>
+{{-- MODAL KONFIRMASI DELETE --}}
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:400px">
+        <div class="modal-content" style="border:none; border-radius:24px; overflow:hidden;">
+
+            <div class="modal-body text-center" style="padding:40px 32px 32px">
+
+                {{-- Icon --}}
+                <div class="delete-icon-wrap">
+                    <i class="bi bi-trash3-fill"></i>
+                </div>
+
+                {{-- Title --}}
+                <h5 class="delete-title">Delete Member</h5>
+
+                {{-- Message --}}
+                <p class="delete-msg">
+                    Are you sure you want to delete
+                    <strong id="deleteMemberName"></strong>?
+                    <br>
+                    <span style="color:#ef4444; font-size:12px;">
+                        This action cannot be undone.
+                    </span>
+                </p>
+
+                {{-- Buttons --}}
+                <div class="delete-actions">
+                    <button type="button"
+                            class="btn-del-cancel"
+                            data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="button"
+                            class="btn-del-confirm"
+                            id="btnConfirmDelete">
+                        <i class="bi bi-trash3"></i>
+                        Yes, Delete
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
 <script>
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -1129,5 +1247,40 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 
+//delete
+let deleteTargetId = null;
+
+function confirmDelete(id, name) {
+    deleteTargetId = id;
+    document.getElementById('deleteMemberName').textContent = name;
+    new bootstrap.Modal(
+        document.getElementById('deleteConfirmModal')
+    ).show();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    // Filter & search
+    const form        = document.getElementById('filterForm');
+    const searchInput = document.getElementById('searchInput');
+    let timer;
+
+    searchInput.addEventListener('keyup', function () {
+        clearTimeout(timer);
+        timer = setTimeout(function () { form.submit(); }, 500);
+    });
+
+    document.querySelectorAll('.auto-filter').forEach(function (item) {
+        item.addEventListener('change', function () { form.submit(); });
+    });
+
+    // Confirm delete
+    document.getElementById('btnConfirmDelete').addEventListener('click', function () {
+        if (deleteTargetId) {
+            document.getElementById('deleteForm-' + deleteTargetId).submit();
+        }
+    });
+
+});
 </script>
 @endsection

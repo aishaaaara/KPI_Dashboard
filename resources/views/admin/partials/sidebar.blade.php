@@ -158,48 +158,33 @@
 {{-- USER PROFILE --}}
 <div class="sidebar-user">
 
-    <div class="user-info">
+    <a href=""
+       class="user-info"
+       id="userInfoBtn"
+       title="Lihat Profil">
 
         <div class="user-avatar">
-
             <i class="bi bi-person-circle"></i>
-
         </div>
 
         <div class="user-detail">
-
-            <div class="user-name">
-
-                Administrator
-
-            </div>
-
-            <small>
-
-                Admin Access
-
-            </small>
-
+            <div class="user-name">{{ auth()->user()->name }}</div>
+            <small>Admin Access</small>
         </div>
 
-    </div>
+    </a>
 
-   <form action="{{ route('logout') }}"
-      method="POST">
+    <form action="{{ route('logout') }}" method="POST">
+        @csrf
+        <button type="submit" class="logout-btn border-0 bg-transparent" title="Logout">
+            <i class="bi bi-box-arrow-right"></i>
+        </button>
+    </form>
 
-    @csrf
-
-    <button type="submit"
-            class="logout-btn border-0 bg-transparent">
-
-        <i class="bi bi-box-arrow-right"></i>
-
-    </button>
-
-</form>
 </div>
 
 </div>
+
 
 <style>
 
@@ -483,21 +468,25 @@
 
 <script>
 
-const sidebar = document.getElementById('sidebar');
+const sidebar   = document.getElementById('sidebar');
 const toggleBtn = document.getElementById('toggleSidebar');
+const userBtn   = document.getElementById('userInfoBtn');
 
 toggleBtn.addEventListener('click', () => {
-
-    if(window.innerWidth <= 768){
-
+    if (window.innerWidth <= 768) {
         sidebar.classList.toggle('show');
-
-    }else{
-
+    } else {
         sidebar.classList.toggle('collapsed');
-
     }
+});
 
+// Klik avatar saat sidebar collapsed → buka sidebar, jangan navigate
+userBtn.addEventListener('click', (e) => {
+    if (sidebar.classList.contains('collapsed')) {
+        e.preventDefault(); // cegah redirect dulu
+        sidebar.classList.remove('collapsed');
+    }
+    // Kalau sidebar sudah terbuka → link berjalan normal ke /admin/profile
 });
 
 </script>

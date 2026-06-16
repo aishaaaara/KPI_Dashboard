@@ -6,7 +6,7 @@
 <div class="dashboard-header">
 
     <div class="header-title">
-        <h2>Dashboard</h2>
+        <h2>Dashboard, Hi {{ auth()->user()->name }}!</h2>
         <p>KPI Monitoring Overview</p>
     </div>
 

@@ -295,11 +295,56 @@
         color: #fff;
     }
 
-    /* ----- Pagination ----- */
-    .notif-pagination {
-        margin-top: 16px;
+    /* ----- Pagination Fix ----- */
+    .notif-pagination .pagination {
         display: flex;
+        align-items: center;
         justify-content: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .notif-pagination .page-item .page-link {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+        background: #fff;
+        color: #374151;
+        font-size: 13px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all .15s;
+        padding: 0;
+    }
+
+    .notif-pagination .page-item .page-link:hover {
+        background: #f3f4f6;
+        border-color: #2563eb;
+        color: #2563eb;
+    }
+
+    .notif-pagination .page-item.active .page-link {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: #fff;
+    }
+
+    .notif-pagination .page-item.disabled .page-link {
+        opacity: .4;
+        cursor: not-allowed;
+    }
+
+    /* Sembunyikan teks "Previous" dan "Next", tampilkan icon */
+    .notif-pagination .page-item:first-child .page-link span[aria-hidden],
+    .notif-pagination .page-item:last-child .page-link span[aria-hidden] {
+        font-size: 16px;
     }
 
 </style>

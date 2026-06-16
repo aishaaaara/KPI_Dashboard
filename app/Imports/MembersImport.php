@@ -3,37 +3,37 @@
 namespace App\Imports;
 
 use App\Models\Member;
-use App\Models\Position;
-use App\Models\Team;
-use App\Models\EmploymentType;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class MembersImport implements ToModel, WithHeadingRow
 {
     public function model(array $row)
     {
+        // Handle tanggal — bisa berupa angka serial Excel atau string
+        $joinDate = null;
+        $endDate  = null;
+
+        if (!empty($row['join_date'])) {
+            $joinDate = is_numeric($row['join_date'])
+                ? Date::excelToDateTimeObject($row['join_date'])->format('Y-m-d')
+                : \Carbon\Carbon::parse($row['join_date'])->format('Y-m-d');
+        }
+
+        if (!empty($row['end_date'])) {
+            $endDate = is_numeric($row['end_date'])
+                ? Date::excelToDateTimeObject($row['end_date'])->format('Y-m-d')
+                : \Carbon\Carbon::parse($row['end_date'])->format('Y-m-d');
+        }
+
         return new Member([
-            'eid' => 'EMP' . str_pad(Member::count() + 1, 3, '0', STR_PAD_LEFT),
-            'name' => $row['name'],
-
-            'position_id' => Position::where(
-                'name',
-                $row['position']
-            )->first()?->id,
-
-            'team_id' => Team::where(
-                'name',
-                $row['team']
-            )->first()?->id,
-
-            'employment_type_id' => EmploymentType::where(
-                'name',
-                $row['employment_type']
-            )->first()?->id,
-
-            'join_date' => $row['join_date'],
-            'end_date' => $row['end_date'],
+            'name'               => $row['name'],
+            'position_id'        => $row['position_id'],
+            'team_id'            => $row['team_id'],
+            'employment_type_id' => $row['employment_type_id'],
+            'join_date'          => $joinDate,
+            'end_date'           => $endDate,
         ]);
     }
 }

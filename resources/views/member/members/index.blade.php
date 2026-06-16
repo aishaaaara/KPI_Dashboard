@@ -573,44 +573,6 @@ body{
     transform:translateY(-2px);
 }
 
-/* IMPORT */
-.btn-import{
-    height: 40px;
-    padding: 0 16px;
-    border: none;
-    border-radius: 12px;
-    background:#fff7ed;
-    color:#ea580c;
-    border:1px solid #fed7aa;
-}
-
-.btn-import:hover{
-    background:#ea580c;
-    color:white;
-    transform:translateY(-2px);
-}
-
-/* ADD */
-.btn-add{
-        height: 40px;
-        padding: 0 16px;
-        border: none;
-        border-radius: 12px;
-        background: #2563eb;
-        color: #fff;
-        font-size: 13px;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 7px;
-        cursor: pointer;
-        transition: background 0.15s;
-}
-
-.btn-add:hover{
-    background:#2388f5;
-    transform:translateY(-2px);
-}
 .btn-template{
     height: 40px;
     padding: 0 16px;
@@ -628,60 +590,7 @@ body{
 }
 </style>
 
-<div class="modal fade"
-     id="importModal"
-     tabindex="-1">
 
-    <div class="modal-dialog">
-
-        <div class="modal-content">
-
-            <form action="{{ route('members.import') }}"
-                  method="POST"
-                  enctype="multipart/form-data">
-
-                @csrf
-
-                <div class="modal-header">
-                    <h5>Import Excel</h5>
-                </div>
-
-                <div class="modal-body">
-
-                    <input type="file"
-                           name="file"
-                           class="form-control"
-                           accept=".xlsx,.xls"
-                           required>
-
-                </div>
-
-                <div class="modal-footer">
-
-                    <button type="button"
-                            class="btn btn-secondary"
-                            data-bs-dismiss="modal">
-
-                        Cancel
-
-                    </button>
-
-                    <button type="submit"
-                            class="btn btn-primary">
-
-                        Import
-
-                    </button>
-
-                </div>
-
-            </form>
-
-        </div>
-
-    </div>
-
-</div>
 <script>
 
 document.addEventListener('DOMContentLoaded', function () {

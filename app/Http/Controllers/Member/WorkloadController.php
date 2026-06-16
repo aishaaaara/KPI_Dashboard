@@ -11,37 +11,36 @@ use App\Models\Period;
 
 class WorkloadController extends Controller
 {
-    public function index(Request $request)
+public function index(Request $request)
 {
-
     $periods = Period::latest()->get();
+
     $selectedPeriod = $request->period_id ?? $periods->first()?->id;
 
-    $workloads = Workload::with([
-        'member.position',
-        'period'
-    ]);
+    $workloads = Workload::with(['member.position', 'period'])
+        ->when($selectedPeriod, function ($query) use ($selectedPeriod) {
+            $query->where('period_id', $selectedPeriod);
+        })
+        ->get();
 
-    if($selectedPeriod){
-        $workloads->where(
-            'period_id',
-            $selectedPeriod
-        );
-    }
+    $existingPeriods = Period::select( 'month','year')->get();
 
-    $workloads = $workloads->get();
+    $workloadCounts = Workload::selectRaw('period_id, count(*) as total')
+    ->groupBy('period_id')
+    ->pluck('total', 'period_id'); // hasil: [period_id => total]
 
     $members = Member::with('position')->get();
 
     return view(
-        'member.workload.index',
+        'admin.workload.index',
         compact(
             'workloads',
+            'workloadCounts',
             'members',
             'periods',
-            'selectedPeriod'
+            'selectedPeriod',
+            'existingPeriods'
         )
     );
 }
-
 }

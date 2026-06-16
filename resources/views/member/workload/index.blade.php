@@ -31,19 +31,11 @@
     {{-- PERIOD FILTER --}}
     <div class="period-container">
 
-        <div class="period-wrapper">
-
-            @foreach($periods as $period)
-
-                @php
-
-                    $totalData =
-                        $workloads
-                        ->where('period_id', $period->id)
-                        ->count();
-
-                @endphp
-
+    <div class="period-wrapper" id="periodWrapper">
+        @foreach($periods as $period)
+            @php
+                $totalData = $workloadCounts[$period->id] ?? 0;
+            @endphp
                 <div class="period-card
                     {{ $selectedPeriod == $period->id ? 'active-period' : '' }}">
 
@@ -64,12 +56,6 @@
                                     {{ $period->year }}
 
                                 </span>
-
-                                <small class="period-subtitle">
-
-                                    Workload Period
-                                </small>
-
                             </div>
 
                         </div>
@@ -408,6 +394,7 @@
     font-size:11px;
     font-weight:700;
     color:#6b7280;
+    margin-left: 8px;
 }
 
 .active-period{

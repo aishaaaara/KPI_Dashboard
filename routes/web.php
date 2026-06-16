@@ -70,6 +70,27 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 
+// ADMIN — tambah names khusus untuk members saja
+Route::middleware(['auth', 'role:admin'])
+    ->prefix('admin')
+    ->group(function () {
+
+        Route::resource('members', MemberController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->names([                                    // ← tambah ini
+                'index'   => 'admin.members.index',
+                'store'   => 'admin.members.store',
+                'update'  => 'admin.members.update',
+                'destroy' => 'admin.members.destroy',
+            ]);
+
+        Route::get('/members/export',   [MemberController::class, 'export'])->name('admin.members.export');
+        Route::post('/members/import',  [MemberController::class, 'import'])->name('admin.members.import');
+        Route::get('/members/template', [MemberController::class, 'downloadTemplate'])->name('admin.members.template');
+
+        // ... sisanya tidak perlu diubah
+    });
+
 Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
     ->group(function () {
@@ -79,13 +100,6 @@ Route::middleware(['auth', 'role:admin'])
         */
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-        /*
-        | MEMBERS
-        */
-        Route::resource('members', MemberController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::get('/members/export',   [MemberController::class, 'export'])->name('members.export');
-        Route::post('/members/import',  [MemberController::class, 'import'])->name('members.import');
-        Route::get('/members/template', [MemberController::class, 'downloadTemplate'])->name('members.template');
 
         /*
         | COMMUNICATION
@@ -143,6 +157,8 @@ Route::middleware(['auth', 'role:member'])
         | MEMBERS
         */
         Route::resource('members', \App\Http\Controllers\Member\MemberController::class)->only(['index', 'store']);
+        Route::get('/members/export', [\App\Http\Controllers\Admin\MemberController::class, 'export'])->name('members.export');
+
 
         /*
         | METRICS
