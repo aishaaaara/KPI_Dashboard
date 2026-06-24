@@ -37,11 +37,19 @@
 
     </div>
 
-    @if(session('error'))
-        <div class="alert alert-danger">
-            {{ session('error') }}
-        </div>
-    @endif
+        @if(session('success'))
+            <div class="alert-box alert-success">
+                <i class="bi bi-check-circle-fill"></i>
+                <div>{{ session('success') }}</div>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert-box alert-error">
+                <i class="bi bi-exclamation-circle-fill"></i>
+                <div>{{ session('error') }}</div>
+            </div>
+        @endif
 
     <form action="{{ route('login.process') }}"
           method="POST">
@@ -235,6 +243,21 @@ body{
     color:#98A2B3;
     font-size:13px;
 }
+.alert-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    line-height: 1.6;
+}
+
+.alert-box i { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+.alert-success { background: #e8fff1; color: #16a34a; border: 1px solid #bbf7d0; }
+.alert-error   { background: #fff1f1; color: #dc2626; border: 1px solid #fecaca; }
 </style>
 
 <script>

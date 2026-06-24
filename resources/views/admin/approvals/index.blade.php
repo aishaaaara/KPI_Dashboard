@@ -4,26 +4,17 @@
 
 <div class="aw">
 
-    {{-- HEADER --}}
+
     {{-- HEADER --}}
     <div class="page-header">
-
         <div>
-
             <h2 class="page-title">
-
                 Approval Request
-
             </h2>
-
             <p class="page-subtitle">
-
                 Manage user registration requests
-
             </p>
-
         </div>
-
     </div>
 
     {{-- ALERT SUKSES --}}
@@ -108,10 +99,9 @@
                                 @if($request->status == 'pending')
                                     <div class="aw-actions">
                                         {{-- Tombol Approve: submit form member --}}
-                                        <button type="submit"
-                                                form="approve-form-{{ $request->id }}"
-                                                class="btn btn-approve"
-                                                onclick="return validateMember({{ $request->id }})">
+                                       <button type="button"
+                                            class="btn btn-approve"
+                                            onclick="confirmApprove({{ $request->id }})">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13"
                                                  viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                  stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
@@ -123,11 +113,13 @@
                                         </button>
 
                                         {{-- Tombol Reject --}}
-                                        <form action="{{ route('approvals.reject', $request->id) }}"
-                                              method="POST"
-                                              onsubmit="return confirm('Reject this request?')">
-                                            @csrf
-                                            <button type="submit" class="btn btn-reject">
+                                            <form id="reject-form-{{ $request->id }}"
+                                                action="{{ route('approvals.reject', $request->id) }}"
+                                                method="POST">
+                                                @csrf
+                                            <button type="button"
+                                                class="btn btn-reject"
+                                                onclick="confirmReject({{ $request->id }})">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13"
                                                      viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                      stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
@@ -159,20 +151,60 @@
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-/**
- * Validasi: pastikan member sudah dipilih sebelum submit approve.
- * Kalau belum, highlight border select merah dan batalkan submit.
- */
-function validateMember(requestId) {
+function confirmApprove(requestId) {
     const select = document.getElementById('member-select-' + requestId);
+
     if (!select || !select.value) {
         select.style.borderColor = '#E24B4A';
         select.focus();
         setTimeout(() => select.style.borderColor = '', 2000);
-        return false;
+
+        Swal.fire({
+            icon: 'warning',
+            title: 'Pilih member terlebih dahulu',
+            text: 'Harap pilih member yang akan di-assign sebelum approve.',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#3B6D11',
+            borderRadius: '14px',
+        });
+        return;
     }
-    return true;
+
+    Swal.fire({
+        title: 'Approve request ini?',
+        text: 'User akan dibuatkan akun dan di-assign ke member yang dipilih.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Approve',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#3B6D11',
+        cancelButtonColor: '#A32D2D',
+        reverseButtons: true,
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('approve-form-' + requestId).submit();
+        }
+    });
+}
+
+function confirmReject(requestId) {
+    Swal.fire({
+        title: 'Tolak request ini?',
+        text: 'Request akan ditandai sebagai rejected dan tidak bisa dibatalkan.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Tolak',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#A32D2D',
+        cancelButtonColor: '#6B7280',
+        reverseButtons: true,
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('reject-form-' + requestId).submit();
+        }
+    });
 }
 </script>
 
@@ -376,7 +408,6 @@ function validateMember(requestId) {
         min-width: 160px;
     }
 }
-
 </style>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 @endsection

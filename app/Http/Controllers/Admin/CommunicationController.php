@@ -11,42 +11,40 @@ use App\Services\NotificationService;
 
 class CommunicationController extends Controller
 {
-    public function index(Request $request)
+   public function index(Request $request)
 {
-    $periods = Period::orderBy('year', 'desc')
-        ->orderBy('id', 'desc')
+    $periods = Period::selectRaw("*, 
+        FIELD(month, 'January','February','March','April','May','June',
+        'July','August','September','October','November','December') as month_order")
+        ->orderBy('year', 'asc')
+        ->orderBy('month_order', 'asc')
         ->get();
 
-    $selectedPeriod = $request->period_id ?? $periods->first()?->id;
+    $selectedPeriod = $request->period_id ?? $periods->last()?->id; // ← last() bukan first() supaya default ke terbaru
 
-    // Untuk tabel — difilter by period
     $communications = Communication::with(['member.position', 'period'])
         ->when($selectedPeriod, function ($query) use ($selectedPeriod) {
             $query->where('period_id', $selectedPeriod);
         })
         ->latest()
         ->get();
-        
-    $existingPeriods = Period::select( 'month','year')->get();
 
-    // Untuk badge count — semua data tanpa filter
+    $existingPeriods = Period::select('month', 'year')->get();
+
     $communicationCounts = Communication::selectRaw('period_id, count(*) as total')
-    ->groupBy('period_id')
-    ->pluck('total', 'period_id'); // hasil: [period_id => total]
+        ->groupBy('period_id')
+        ->pluck('total', 'period_id');
 
     $members = Member::with(['position'])->get();
 
-    return view(
-        'admin.communication.index',
-        compact(
-            'communications',
-            'communicationCounts', // ← tambah ini
-            'members',
-            'periods',
-            'selectedPeriod',
-            'existingPeriods'
-        )
-    );
+    return view('admin.communication.index', compact(
+        'communications',
+        'communicationCounts',
+        'members',
+        'periods',
+        'selectedPeriod',
+        'existingPeriods'
+    ));
 }
 
     public function store(Request $request)
@@ -184,6 +182,11 @@ class CommunicationController extends Controller
     public function update(Request $request, $id)
 {
     $communication = Communication::findOrFail($id);
+    $period        = Period::findOrFail($communication->period_id);
+
+    if ($this->isPeriodLocked($period)) {
+        return back()->with('error', 'Periode ini sudah terkunci dan tidak dapat diubah.');
+    }
 
     $overall = (
 
@@ -245,5 +248,17 @@ public function destroyPeriod($id)
             'success',
             'Period deleted successfully'
         );
+}
+
+    private function isPeriodLocked(Period $period): bool
+{
+    $periodDate = \Carbon\Carbon::createFromDate(
+        $period->year,
+        date('n', strtotime($period->month)),
+        1
+    );
+
+    // Terkunci kalau bulannya sudah lewat dari bulan sekarang
+    return $periodDate->lt(now()->startOfMonth());
 }
 }

@@ -39,4 +39,20 @@ class Member extends Model
         return $this->belongsTo(User::class);
     }
     
+    protected static function boot()
+{
+    parent::boot();
+
+    static::creating(function ($member) {
+        if (empty($member->eid)) {
+            $lastEid = static::orderByRaw('CAST(SUBSTRING(eid, 4) AS UNSIGNED) DESC')
+                ->value('eid');
+
+            $nextNumber = $lastEid ? (int) substr($lastEid, 3) + 1 : 1;
+
+            $member->eid = 'EMP' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+        }
+    });
+}
+    
 }

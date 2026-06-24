@@ -10,42 +10,39 @@ use App\Models\Period;
 
 class CommunicationController extends Controller
 {
-public function index(Request $request)
-{
-    $periods = Period::orderBy('year', 'desc')
-        ->orderBy('id', 'desc')
-        ->get();
+    public function index(Request $request)
+    {
+        $periods = Period::selectRaw("*, 
+            FIELD(month, 'January','February','March','April','May','June',
+            'July','August','September','October','November','December') as month_order")
+            ->orderBy('year', 'asc')
+            ->orderBy('month_order', 'asc')
+            ->get();
 
-    $selectedPeriod = $request->period_id ?? $periods->first()?->id;
+        $selectedPeriod = $request->period_id ?? $periods->last()?->id; // ← last() bukan first() supaya default ke terbaru
 
-    // Untuk tabel — difilter by period
-    $communications = Communication::with(['member.position', 'period'])
-        ->when($selectedPeriod, function ($query) use ($selectedPeriod) {
-            $query->where('period_id', $selectedPeriod);
-        })
-        ->latest()
-        ->get();
-        
-    $existingPeriods = Period::select( 'month','year')->get();
+        $communications = Communication::with(['member.position', 'period'])
+            ->when($selectedPeriod, function ($query) use ($selectedPeriod) {
+                $query->where('period_id', $selectedPeriod);
+            })
+            ->latest()
+            ->get();
 
-    // Untuk badge count — semua data tanpa filter
-    $communicationCounts = Communication::selectRaw('period_id, count(*) as total')
-    ->groupBy('period_id')
-    ->pluck('total', 'period_id'); // hasil: [period_id => total]
+        $existingPeriods = Period::select('month', 'year')->get();
 
-    $members = Member::with(['position'])->get();
+        $communicationCounts = Communication::selectRaw('period_id, count(*) as total')
+            ->groupBy('period_id')
+            ->pluck('total', 'period_id');
 
-    return view(
-        'member.communication.index',
-        compact(
+        $members = Member::with(['position'])->get();
+
+        return view('member.communication.index', compact(
             'communications',
-            'communicationCounts', // ← tambah ini
+            'communicationCounts',
             'members',
             'periods',
             'selectedPeriod',
             'existingPeriods'
-        )
-    );
-}
-
+        ));
+    }
 }

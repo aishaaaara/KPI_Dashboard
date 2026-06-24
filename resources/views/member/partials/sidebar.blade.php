@@ -37,7 +37,7 @@
 
             {{-- DASHBOARD --}}
             <li>
-                <a href="/member/dashboard"
+                <a href="/member/dashboard" title="Dashboard"
                    class="{{ request()->is('member/dashboard') ? 'active' : '' }}">
 
                     <i class="bi bi-grid-fill"></i>
@@ -51,7 +51,7 @@
 
             {{-- MEMBERS --}}
             <li>
-                <a href="/member/members"
+                <a href="/member/members" title="Team Member"
                    class="{{ request()->is('member/members*') ? 'active' : '' }}">
 
                     <i class="bi bi-people-fill"></i>
@@ -74,7 +74,7 @@
 
             {{-- COMMUNICATION --}}
             <li>
-                <a href="/member/communication"
+                <a href="/member/communication" title="Communication"
                    class="{{ request()->is('member/communication*') ? 'active' : '' }}">
 
                     <i class="bi bi-chat-left-text-fill"></i>
@@ -88,7 +88,7 @@
 
             {{-- STORY POINT --}}
             <li>
-                <a href="/member/story-points"
+                <a href="/member/story-points" title="Story Points"
                    class="{{ request()->is('member/story-points*') ? 'active' : '' }}">
 
                     <i class="bi bi-journal-text"></i>
@@ -102,7 +102,7 @@
 
             {{-- WORKLOAD --}}
             <li>
-                <a href="/member/workload"
+                <a href="/member/workload" title="Workload"
                    class="{{ request()->is('member/workload*') ? 'active' : '' }}">
 
                     <i class="bi bi-kanban-fill"></i>
@@ -125,7 +125,7 @@
 
             {{-- PERFORMANCE --}}
             <li>
-                <a href="/member/performance-insight"
+                <a href="/member/performance-insight" title="Performance Insight"
                 class="{{ request()->is('member/performance-insight*') ? 'active' : '' }}">
 
                     <i class="bi bi-graph-up-arrow"></i>
@@ -140,12 +140,10 @@
 
 </div>
 
-{{-- USER PROFILE --}}
+
 {{-- USER PROFILE --}}
 <div class="sidebar-user">
-
     <a href="/member/profile" class="user-info" title="Lihat Profil">
-
         <div class="user-avatar">
             <i class="bi bi-person-circle"></i>
         </div>
@@ -172,7 +170,7 @@
 
 .sidebar{
     width:260px;
-    min-height:100vh;
+    height:100vh;
     background:#082B5B;
     padding:24px 18px;
     color:white;
@@ -446,6 +444,9 @@
     margin: 0;
     padding: 0;
 }
+.sidebar > div:first-child::-webkit-scrollbar {
+    display: none;
+} */
 </style>
 
 <script>

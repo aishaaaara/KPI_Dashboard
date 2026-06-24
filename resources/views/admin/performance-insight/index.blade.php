@@ -13,18 +13,13 @@
 {{-- ===================== TOOLBAR ===================== --}}
 <div class="pi-toolbar">
 
-    {{-- Period Filter + Generate --}}
-    <form
-        method="POST"
-        action="{{ route('performance-insight.generate') }}"
-        class="toolbar-form">
+    <div class="toolbar-form">
 
-        @csrf
-
+        {{-- Dropdown period: saat berubah, reload halaman dulu --}}
         <select
-            name="period_id"
+            id="period-select"
             class="period-select"
-            required
+            onchange="onPeriodChange(this.value)"
             aria-label="Pilih periode">
 
             <option value="">-- Pilih Bulan --</option>
@@ -39,27 +34,23 @@
 
         </select>
 
-        @php
-            $periodLocked = $insights->isNotEmpty() && $insights->every(fn($i) => $i->is_sent);
-        @endphp
+        {{-- Form generate — period_id diisi via JS --}}
+        <form
+            method="POST"
+            action="{{ route('performance-insight.generate') }}"
+            id="generate-form">
 
-        <button type="submit" class="btn-generate" {{ $periodLocked ? 'disabled' : '' }}>
+            @csrf
+            <input type="hidden" name="period_id" id="generate-period-id" value="{{ $selectedPeriod }}">
+
+        <button type="submit" class="btn-generate">
             <i class="bi bi-lightning-charge-fill"></i>
             Generate
         </button>
 
-    </form>
-
-        {{-- Period filter (GET) for display only --}}
-        <form method="GET" id="filter-form" style="display:none">
-            <select name="period_id" onchange="this.form.submit()">
-                @foreach ($periods as $period)
-                    <option value="{{ $period->id }}" {{ $selectedPeriod == $period->id ? 'selected' : '' }}>
-                        {{ $period->month }} {{ $period->year }}
-                    </option>
-                @endforeach
-            </select>
         </form>
+
+    </div>
 
 </div>
 
@@ -196,35 +187,52 @@
                     id="card-{{ $insight->id }}">
 
                     {{-- Checkbox + Header --}}
-                    <div class="m-card-top">
+                <div class="m-card-top">
 
-                        <input
-                            type="checkbox"
-                            name="selected[]"
-                            value="{{ $insight->id }}"
-                            class="m-checkbox"
-                            {{ $insight->is_sent ? 'disabled' : '' }}
-                            onchange="syncSelection()"
-                            aria-label="Pilih {{ $insight->member->name }}">
+                    @php
+                        $canResend = $insight->is_sent &&
+                                    !$insight->is_read &&
+                                    $insight->sent_at &&
+                                    \Carbon\Carbon::parse($insight->sent_at)->diffInMinutes(now()) >= 5;
+                    @endphp
+                    <input
+                        type="checkbox"
+                        name="selected[]"
+                        value="{{ $insight->id }}"
+                        class="m-checkbox"
+                        {{ ($insight->is_sent && $insight->is_read) || ($insight->is_sent && !$canResend) ? 'disabled' : '' }}
+                        onchange="syncSelection()"
+                        aria-label="Pilih {{ $insight->member->name }}">
 
-                        <div class="m-avatar">{{ $initials }}</div>
+                    <div class="m-avatar">{{ $initials }}</div>
 
-                        <div class="m-info">
-                            <div class="m-name">{{ $insight->member?->name ?? 'Unknown' }}</div>
-                            <div class="m-pos">{{ $insight->member->position?->name ?? '-' }}</div>
-                        </div>
+                    <div class="m-info">
+                        <div class="m-name">{{ $insight->member?->name ?? 'Unknown' }}</div>
+                        <div class="m-pos">{{ $insight->member->position?->name ?? '-' }}</div>
+                    </div>
 
-                        <div class="m-meta">
-                            <span class="status-badge {{ $statusClass }}">{{ $statusLabel }}</span>
-                            @if ($insight->is_sent)
-                                <span class="sent-pill">
-                                    <i class="bi bi-send-check-fill"></i>
-                                    Terkirim
+                    <div class="m-meta">
+                        <span class="status-badge {{ $statusClass }}">{{ $statusLabel }}</span>
+                        @if ($insight->is_sent)
+                            <span class="sent-pill">
+                                <i class="bi bi-send-check-fill"></i>
+                                Terkirim
+                            </span>
+                            @if ($insight->is_read)
+                                <span class="read-pill read-pill--read">
+                                    <i class="bi bi-eye-fill"></i>
+                                    Dibaca {{ \Carbon\Carbon::parse($insight->read_at)->diffForHumans() }}
+                                </span>
+                            @else
+                                <span class="read-pill read-pill--unread">
+                                    <i class="bi bi-eye-slash"></i>
+                                    Belum dibaca
                                 </span>
                             @endif
-                        </div>
-
+                        @endif
                     </div>
+
+                </div>
 
                     {{-- KPI Score Bars --}}
                     <div class="score-rows">
@@ -818,7 +826,26 @@
     }
 
     .sent-info em { color: #9ca3af; font-style: italic; }
+    .read-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 600;
+    }
 
+    .read-pill--read {
+        background: #eff6ff;
+        color: #1d4ed8;
+    }
+
+    .read-pill--unread {
+        background: #fef3c7;
+        color: #b45309;
+    }
+    
 </style>
 
 {{-- ===================== SCRIPTS ===================== --}}
@@ -871,7 +898,11 @@
 
     /* ----- Init ----- */
     syncSelection();
-
+    function onPeriodChange(periodId) {
+    if (!periodId) return;
+    // Reload halaman dengan period baru supaya $periodLocked dihitung ulang
+    window.location.href = '{{ route('performance-insight.index') }}?period_id=' + periodId;
+}
 </script>
 
 @endsection

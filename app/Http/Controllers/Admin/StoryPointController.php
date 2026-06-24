@@ -15,9 +15,14 @@ class StoryPointController extends Controller
 
 public function index(Request $request)
 {
-    $periods = Period::latest()->get();
+        $periods = Period::selectRaw("*, 
+        FIELD(month, 'January','February','March','April','May','June',
+        'July','August','September','October','November','December') as month_order")
+        ->orderBy('year', 'asc')
+        ->orderBy('month_order', 'asc')
+        ->get();
 
-    $selectedPeriod = $request->period_id ?? $periods->first()?->id;
+    $selectedPeriod = $request->period_id ?? $periods->last()?->id;
 
     $storyPoints = StoryPoint::with(['member.position', 'period'])
         ->when($selectedPeriod, function ($query) use ($selectedPeriod) {
@@ -130,8 +135,12 @@ public function storePeriod(Request $request)
     
 public function update(Request $request,$id)
 {
-    $storyPoint =
-        StoryPoint::findOrFail($id);
+    $storyPoint = StoryPoint::findOrFail($id);
+    $period     = Period::findOrFail($storyPoint->period_id);
+
+    if ($this->isPeriodLocked($period)) {
+        return back()->with('error', 'Periode ini sudah terkunci dan tidak dapat diubah.');
+    }
 
     $achievement = $request->target > 0
         ? round(($request->totals / $request->target) * 100)
@@ -177,4 +186,15 @@ public function destroyPeriod($id)
             );
     }
 
+    private function isPeriodLocked(Period $period): bool
+{
+    $periodDate = \Carbon\Carbon::createFromDate(
+        $period->year,
+        date('n', strtotime($period->month)),
+        1
+    );
+
+    // Terkunci kalau bulannya sudah lewat dari bulan sekarang
+    return $periodDate->lt(now()->startOfMonth());
+}
 }

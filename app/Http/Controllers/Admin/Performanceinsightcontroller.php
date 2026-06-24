@@ -14,22 +14,21 @@ use App\Services\NotificationService;
 
 class PerformanceInsightController extends Controller
 {
+
     public function index(Request $request)
 {
     $periods = Period::latest()->get();
 
-    // Auto-select periode terbaru kalau belum ada pilihan
     $selectedPeriod = $request->period_id ?? optional($periods->first())->id;
 
     $insights = PerformanceInsight::with([
         'member.position',
         'period'
     ])
-    ->whereHas('member') // hindari member null
+    ->whereHas('member')
     ->when($selectedPeriod, function ($query) use ($selectedPeriod) {
         $query->where('period_id', $selectedPeriod);
     })
-    // Deduplikasi: ambil 1 record terbaru per member
     ->get()
     ->unique('member_id');
 
@@ -38,6 +37,7 @@ class PerformanceInsightController extends Controller
             ->where('period_id', $insight->period_id)
             ->first();
     }
+
 
     return view(
         'admin.performance-insight.index',
@@ -175,17 +175,28 @@ class PerformanceInsightController extends Controller
         ->with('success', 'Performance Insight berhasil digenerate');
     }
 
-    public function send(Request $request)
+    
+   public function send(Request $request)
 {
     $ids = $request->selected ?? [];
 
     $insights = PerformanceInsight::with(['member.user', 'period'])
         ->whereIn('id', $ids)
-        ->where('is_sent', 0) // ← hanya yang belum dikirim
+        ->where(function ($q) {
+            $q->where('is_sent', 0)
+              ->orWhere(function ($q2) {
+                  $q2->where('is_read', 0)
+                     ->where('sent_at', '<=', now()->subMinutes(5)); //muncul resend saaat sudah 5 menit
+                                            // now()->subHours(24)); kalo mau berubah menjadi setiap 24 jam bisa ganti ini
+              });
+        })
         ->get();
 
     if ($insights->isEmpty()) {
-        return redirect()->back()->with('error', 'Semua insight yang dipilih sudah pernah dikirim');
+        return redirect()->back()->with(
+            'error',
+            'Semua insight sudah dibaca atau belum melewati 5 menit sejak pengiriman terakhir'
+        );
     }
 
     foreach ($insights as $insight) {
@@ -193,6 +204,8 @@ class PerformanceInsightController extends Controller
             'is_sent'     => 1,
             'sent_at'     => now(),
             'admin_notes' => $request->admin_notes,
+            'is_read'     => false,
+            'read_at'     => null,
         ]);
 
         app(NotificationService::class)->notifyPerformanceInsightSent(
@@ -203,6 +216,5 @@ class PerformanceInsightController extends Controller
 
     return redirect()->back()->with('success', 'Insight berhasil dikirim');
 }
-
 
 }

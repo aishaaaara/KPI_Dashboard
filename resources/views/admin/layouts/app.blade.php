@@ -17,7 +17,7 @@
     {{-- Bootstrap Icons --}}
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
+    
     <style>
 
         body{
@@ -28,12 +28,16 @@
 
         .wrapper{
             display:flex;
+              align-items: flex-start;
         }
 
-        .main-content{
-            flex:1;
-            padding:24px;
+        .main-content {
+            flex: 1;
+            padding: 24px;
+            min-width: 0;      /* ← ini yang bikin konten tidak overflow ke sidebar */
+            overflow: hidden;  /* ← ini yang membatasi konten */
         }
+
 
     </style>
 

@@ -37,32 +37,25 @@
 
             {{-- DASHBOARD --}}
             <li>
-                <a href="/admin/dashboard"
+                <a href="/admin/dashboard" title="Dashboard"
                    class="{{ request()->is('admin/dashboard') ? 'active' : '' }}">
-
                     <i class="bi bi-grid-fill"></i>
-
                     <span>
                         Dashboard
                     </span>
-
                 </a>
             </li>
 
             {{-- MEMBERS --}}
             <li>
-                <a href="/admin/members"
+                <a href="/admin/members" title="Team Member"
                    class="{{ request()->is('admin/members*') ? 'active' : '' }}">
-
                     <i class="bi bi-people-fill"></i>
-
                     <span>
                         Team Member
                     </span>
-
                 </a>
             </li>
-
         </ul>
 
         {{-- METRICS --}}
@@ -74,7 +67,7 @@
 
             {{-- COMMUNICATION --}}
             <li>
-                <a href="/admin/communication"
+                <a href="/admin/communication" title="Communication"
                    class="{{ request()->is('admin/communication*') ? 'active' : '' }}">
 
                     <i class="bi bi-chat-left-text-fill"></i>
@@ -88,7 +81,7 @@
 
             {{-- STORY POINT --}}
             <li>
-                <a href="/admin/story-points"
+                <a href="/admin/story-points" title="Story Points"
                    class="{{ request()->is('admin/story-points*') ? 'active' : '' }}">
 
                     <i class="bi bi-journal-text"></i>
@@ -102,7 +95,7 @@
 
             {{-- WORKLOAD --}}
             <li>
-                <a href="/admin/workload"
+                <a href="/admin/workload" title="Workload"
                    class="{{ request()->is('admin/workload*') ? 'active' : '' }}">
 
                     <i class="bi bi-kanban-fill"></i>
@@ -125,7 +118,7 @@
 
             {{-- PERFORMANCE --}}
             <li>
-                <a href="/admin/performance-insight"
+                <a href="/admin/performance-insight" title="Performance Insight"
                 class="{{ request()->is('admin/performance-insight*') ? 'active' : '' }}">
 
                     <i class="bi bi-graph-up-arrow"></i>
@@ -139,17 +132,15 @@
 
             {{-- APPROVAL --}}
            <li>
-    <a href="/admin/approvals"
-       class="{{ request()->is('admin/approvals*') ? 'active' : '' }}">
+            <a href="/admin/approvals" title="Approval"
+            class="{{ request()->is('admin/approvals*') ? 'active' : '' }}">
+                <i class="bi bi-person-check-fill"></i>
+                <span>
+                    Approval
+                </span>
 
-        <i class="bi bi-person-check-fill"></i>
-
-        <span>
-            Approval
-        </span>
-
-    </a>
-</li>
+            </a>
+        </li>
 
         </ul>
 
@@ -190,7 +181,7 @@
 
 .sidebar{
     width:260px;
-    min-height:100vh;
+    height:100vh;
     background:#082B5B;
     padding:24px 18px;
     color:white;
@@ -464,6 +455,18 @@
     margin: 0;
     padding: 0;
 }
+/* Bagian atas (logo + menu) bisa scroll
+.sidebar > div:first-child {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    min-height: 0; /* penting! tanpa ini flex tidak mau scroll */
+}
+
+.sidebar > div:first-child::-webkit-scrollbar {
+    display: none;
+} */
 </style>
 
 <script>

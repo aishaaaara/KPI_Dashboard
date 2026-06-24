@@ -30,12 +30,17 @@ class AuthController extends Controller
 
     ];
 
-    if(Auth::attempt($credentials))
+    if (Auth::attempt($credentials))
     {
         $request->session()->regenerate();
 
-        if(auth()->user()->role == 'admin')
-        {
+        // Cek apakah user masih aktif
+        if (auth()->user()->is_active == 0) {
+            Auth::logout();
+            return back()->with('error', 'Akun Anda telah dinonaktifkan. Hubungi admin.');
+        }
+
+        if (auth()->user()->role == 'admin') {
             return redirect('/admin/dashboard');
         }
 

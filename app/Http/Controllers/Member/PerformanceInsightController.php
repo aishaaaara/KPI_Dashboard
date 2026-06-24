@@ -33,35 +33,28 @@ class PerformanceInsightController extends Controller
                 'member.position',
                 'period'
             ])
-            ->where(
-                'member_id',
-                $member->id
-            )
-            ->where(
-                'is_sent',
-                1
-            )
+            ->where('member_id', $member->id)
+            ->where('is_sent', 1)
             ->when($selectedPeriod, function ($query) use ($selectedPeriod) {
-
-                $query->where(
-                    'period_id',
-                    $selectedPeriod
-                );
-
+                $query->where('period_id', $selectedPeriod);
             })
             ->get();
 
-        foreach ($insights as $insight) {
+        // Auto-mark as read saat member memilih periode dan data muncul
+        if ($selectedPeriod) {
+            foreach ($insights as $insight) {
+                if (!$insight->is_read) {
+                    $insight->update([
+                        'is_read' => true,
+                        'read_at' => now(),
+                    ]);
+                }
+            }
+        }
 
-            $insight->workloadData =
-                Workload::where(
-                    'member_id',
-                    $insight->member_id
-                )
-                ->where(
-                    'period_id',
-                    $insight->period_id
-                )
+        foreach ($insights as $insight) {
+            $insight->workloadData = Workload::where('member_id', $insight->member_id)
+                ->where('period_id', $insight->period_id)
                 ->first();
         }
 

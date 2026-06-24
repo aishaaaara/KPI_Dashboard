@@ -55,8 +55,8 @@ Route::post('/register', [RegisterController::class, 'store'])->name('register.s
 
 Route::get('/forgot-password',       [PasswordResetController::class, 'showForgot'])->name('forgot.password');
 Route::post('/forgot-password',      [PasswordResetController::class, 'sendResetLink'])->name('password.send-link');
-Route::get('/reset-password/{token}', [PasswordResetController::class, 'showReset'])->name('password.reset.form');
 Route::post('/reset-password',       [PasswordResetController::class, 'resetPassword'])->name('password.reset');
+Route::get('/reset-password/{token}', [PasswordResetController::class, 'showReset'])->name('password.reset.form');
 
 Route::middleware('auth')->group(function () {
     Route::get('/notifications',             [NotificationController::class, 'page'])->name('notifications.index');
@@ -88,7 +88,6 @@ Route::middleware(['auth', 'role:admin'])
         Route::post('/members/import',  [MemberController::class, 'import'])->name('admin.members.import');
         Route::get('/members/template', [MemberController::class, 'downloadTemplate'])->name('admin.members.template');
 
-        // ... sisanya tidak perlu diubah
     });
 
 Route::middleware(['auth', 'role:admin'])
@@ -104,21 +103,36 @@ Route::middleware(['auth', 'role:admin'])
         /*
         | COMMUNICATION
         */
-        Route::resource('communication', CommunicationController::class);
+        Route::resource('communication', CommunicationController::class)->names([
+            'index'   => 'admin.communication.index',
+            'store'   => 'admin.communication.store',
+            'update'  => 'admin.communication.update',
+            'destroy' => 'admin.communication.destroy',
+        ]);
         Route::post('/communication/period/store',       [CommunicationController::class, 'storePeriod'])->name('communication.period.store');
         Route::delete('/communication/period/delete/{id}', [CommunicationController::class, 'destroyPeriod'])->name('communication.period.destroy');
 
         /*
         | STORY POINTS
         */
-        Route::resource('story-points', StoryPointController::class);
+        Route::resource('story-points', StoryPointController::class)->names([
+            'index'   => 'admin.story-points.index',
+            'store'   => 'admin.story-points.store',
+            'update'  => 'admin.story-points.update',
+            'destroy' => 'admin.story-points.destroy',
+        ]);
         Route::post('/story-points/period/store',       [StoryPointController::class, 'storePeriod'])->name('story-points.period.store');
         Route::delete('/story-points/period/delete/{id}', [StoryPointController::class, 'destroyPeriod'])->name('story-points.period.destroy');
 
         /*
         | WORKLOAD
         */
-        Route::resource('workload', WorkloadController::class);
+       Route::resource('workload', WorkloadController::class)->names([
+            'index'   => 'admin.workload.index',
+            'store'   => 'admin.workload.store',
+            'update'  => 'admin.workload.update',
+            'destroy' => 'admin.workload.destroy',
+        ]);
         Route::post('/workload/period/store',       [WorkloadController::class, 'storePeriod'])->name('workload.period.store');
         Route::delete('/workload/period/delete/{id}', [WorkloadController::class, 'destroyPeriod'])->name('workload.period.destroy');
 

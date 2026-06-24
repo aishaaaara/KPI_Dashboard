@@ -13,9 +13,14 @@ class WorkloadController extends Controller
 {
 public function index(Request $request)
 {
-    $periods = Period::latest()->get();
+        $periods = Period::selectRaw("*, 
+        FIELD(month, 'January','February','March','April','May','June',
+        'July','August','September','October','November','December') as month_order")
+        ->orderBy('year', 'asc')
+        ->orderBy('month_order', 'asc')
+        ->get();
 
-    $selectedPeriod = $request->period_id ?? $periods->first()?->id;
+    $selectedPeriod = $request->period_id ?? $periods->last()?->id;
 
     $workloads = Workload::with(['member.position', 'period'])
         ->when($selectedPeriod, function ($query) use ($selectedPeriod) {
@@ -32,7 +37,7 @@ public function index(Request $request)
     $members = Member::with('position')->get();
 
     return view(
-        'admin.workload.index',
+        'member.workload.index',
         compact(
             'workloads',
             'workloadCounts',

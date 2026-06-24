@@ -39,7 +39,7 @@
 
             </button>
 
-            <button class="btn-add-data"
+            {{-- <button class="btn-add-data"
                     type="button"
                     data-bs-toggle="modal"
                     data-bs-target="#addWorkloadModal">
@@ -47,16 +47,16 @@
                 <i class="bi bi-plus-circle"></i>
                 Add Data
 
-            </button>
+            </button> --}}
 
         </div>
 
     </div>
 
- {{-- PERIOD FILTER --}}
-<div class="period-container">
+{{-- PERIOD FILTER --}}
+<div class="comm-period period-container">
 
-    <button class="period-nav" id="scrollLeft" onclick="scrollPeriod(-1)">
+    <button class="period-nav" onclick="scrollPeriod(-1)">
         <i class="bi bi-chevron-left"></i>
     </button>
 
@@ -70,35 +70,26 @@
                  id="period-{{ $period->id }}">
 
                 <a href="?period_id={{ $period->id }}" class="period-link">
-                    <div class="period-left">
-                        <div class="period-icon">
-                            <i class="bi bi-calendar-event"></i>
-                        </div>
-                        <div>
-                            <span class="period-month">
-                                {{ substr($period->month, 0, 3) }} {{ $period->year }}
-                            </span>
-                        </div>
-                    </div>
+                    <i class="bi bi-calendar3"></i>
+                    <span class="period-month">{{ substr($period->month, 0, 3) }} {{ $period->year }}</span>
                 </a>
 
-                <div class="period-right">
-                    <span class="period-total">{{ $totalData }}</span>
-                    <form action="{{ route('communication.period.destroy', $period->id) }}" method="POST">
-                        @csrf
-                        @method('DELETE')
-                        <button class="btn-delete-period" type="submit"
-                                onclick="return confirm('Delete this period?')">
-                            <i class="bi bi-trash3"></i>
-                        </button>
-                    </form>
-                </div>
+                <span class="period-total">{{ $totalData }}</span>
+
+                <form action="{{ route('workload.period.destroy', $period->id) }}" method="POST" style="margin:0">
+                    @csrf
+                    @method('DELETE')
+                    <button class="btn-delete-period" type="submit"
+                            onclick="return confirm('Delete this period?')">
+                        <i class="bi bi-trash3"></i>
+                    </button>
+                </form>
 
             </div>
         @endforeach
     </div>
 
-    <button class="period-nav" id="scrollRight" onclick="scrollPeriod(1)">
+    <button class="period-nav" onclick="scrollPeriod(1)">
         <i class="bi bi-chevron-right"></i>
     </button>
 
@@ -211,39 +202,34 @@
                         </div>
 
                         </td>
-                       <td>
-                        <div class="action-group">
+                      
+                        @php
+                            $periodDate = \Carbon\Carbon::createFromDate(
+                                $workload->period->year,
+                                date('n', strtotime($workload->period->month)),
+                                1
+                            );
+                            $isLocked = $periodDate->lt(now()->startOfMonth());
+                        @endphp
 
-                            <button
-                                type="button"
-                                class="btn-edit"
-                                data-bs-toggle="modal"
-                                data-bs-target="#editModal{{ $workload->id }}">
+                        <td>
+                            <div class="action-group">
 
-                                <i class="bi bi-pencil-square"></i>
+                                @if (!$isLocked)
+                                    <button type="button" class="btn-edit"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editModal{{ $workload->id }}">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
+                                @else
+                                    <button class="btn-locked" disabled title="Periode terkunci">
+                                        <i class="bi bi-lock-fill"></i>
+                                    </button>
+                                @endif
+                            </div>
+                        </td>
 
-                            </button>
-
-                            <form action="{{ route('workload.destroy',$workload->id) }}"
-                                method="POST">
-
-                                @csrf
-                                @method('DELETE')
-
-                                <button type="submit"
-                                        class="btn-delete">
-
-                                    <i class="bi bi-trash"></i>
-
-                                </button>
-
-                            </form>
-
-                        </div>
-
-                    </td>
-
-</td>
+                        </td>
                         </td>
 
                     </tr>
@@ -292,7 +278,7 @@
 
         <div class="modal-content custom-modal">
 
-            <form action="{{ route('workload.update',$workload->id) }}"
+            <form action="{{ route('admin.workload.update',$workload->id) }}"
                   method="POST">
 
                 @csrf
@@ -502,7 +488,7 @@
 
         <div class="modal-content custom-modal">
 
-            <form action="{{ route('workload.store') }}"
+            <form action="{{ route('admin.workload.store') }}"
                   method="POST">
 
                 @csrf
@@ -793,24 +779,27 @@ document
     );
 
 loadMonths();
-    //periode
-        function scrollPeriod(direction) {
-            const wrapper = document.getElementById('periodWrapper');
-            // row-reverse jadi arah scroll dibalik
-            wrapper.scrollBy({ left: direction * -220, behavior: 'smooth' });
-        }
 
-        // Auto-scroll ke period yang aktif saat halaman load
-        document.addEventListener('DOMContentLoaded', function () {
-            const active = document.querySelector('.active-period');
-            const wrapper = document.getElementById('periodWrapper');
-            if (active && wrapper) {
-                // Hitung posisi dalam row-reverse
-                const wrapperRight = wrapper.getBoundingClientRect().right;
-                const activeRight  = active.getBoundingClientRect().right;
-                wrapper.scrollLeft -= (wrapperRight - activeRight) - wrapper.offsetWidth / 2;
-            }
-        });
+function scrollPeriod(direction) {
+    const wrapper = document.getElementById('periodWrapper');
+    wrapper.scrollBy({ left: direction * 200, behavior: 'smooth' });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const wrapper = document.getElementById('periodWrapper');
+    const active  = document.querySelector('.active-period');
+
+    if (!wrapper) return;
+
+    if (active) {
+        // Scroll ke period yang aktif
+        wrapper.scrollLeft = active.offsetLeft - (wrapper.offsetWidth / 2) + (active.offsetWidth / 2);
+    } else {
+        // Kalau tidak ada yang aktif, scroll ke paling kanan (terbaru)
+        wrapper.scrollLeft = wrapper.scrollWidth;
+    }
+});
+
 </script>
 
 <style>
@@ -868,143 +857,131 @@ loadMonths();
     background:#2388f5;
 }
 
-.period-container {
+.comm-period.period-container {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     margin-bottom: 24px;
+    max-width: 100%;
+    overflow: hidden;
 }
 
-.period-wrapper {
+.comm-period .period-wrapper {
     display: flex;
-    flex-direction: row-reverse;
-    gap: 14px;
-    overflow-x: auto;
-    padding-bottom: 4px;
-    justify-content: flex-end;
-    scroll-behavior: smooth;
-
-    /* Sembunyikan scrollbar tapi tetap bisa scroll */
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    gap: 6px;
+    overflow-x: hidden;
     flex: 1;
+    scroll-behavior: smooth;
+    min-width: 0;
 }
 
-.period-wrapper::-webkit-scrollbar {
-    display: none;
-}
-
-/* Tombol navigasi */
-.period-nav {
-    width: 36px;
-    height: 36px;
-    border: 1px solid #e5e7eb;
+.comm-period .period-card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
     border-radius: 10px;
+    border: 1px solid #e5e7eb;
     background: #fff;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all .15s;
+    cursor: pointer;
+}
+
+.comm-period .period-card:hover {
+    border-color: #2563eb;
+    background: #f0f6ff;
+}
+
+.comm-period .active-period {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+}
+
+.comm-period .active-period .period-month,
+.comm-period .active-period .period-total,
+.comm-period .active-period i {
+    color: white !important;
+}
+
+.comm-period .period-link {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.comm-period .period-link i {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.comm-period .period-month {
+    font-size: 13px;
+    font-weight: 600;
     color: #374151;
+}
+
+.comm-period .period-total {
+    font-size: 11px;
+    font-weight: 700;
+    color: #6b7280;
+    background: #f3f4f6;
+    border-radius: 999px;
+    padding: 1px 7px;
+    min-width: 20px;
+    text-align: center;
+}
+
+.comm-period .active-period .period-total {
+    background: rgba(255,255,255,.25);
+    color: white;
+}
+
+.comm-period .btn-delete-period {
+    background: transparent;
+    border: none;
+    color: #d1d5db;
+    font-size: 12px;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: color .15s;
+    line-height: 1;
+    width: auto;
+    height: auto;
+    border-radius: 0;
+}
+
+.comm-period .btn-delete-period:hover {
+    color: #ef4444;
+}
+
+.comm-period .period-nav {
+    width: 30px;
+    height: 30px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+    color: #6b7280;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     flex-shrink: 0;
-    transition: background .15s, border-color .15s;
-    font-size: 14px;
+    transition: all .15s;
+    font-size: 12px;
 }
 
-.period-nav:hover {
-    background: #f3f4f6;
+.comm-period .period-nav:hover {
     border-color: #2563eb;
     color: #2563eb;
+    background: #f0f6ff;
 }
 
-.period-nav:disabled {
-    opacity: .4;
-    cursor: not-allowed;
-}
-
-.period-card{
-    min-width:210px;
-    background:white;
-    border-radius:20px;
-    border:1px solid #edf0f5;
-    padding:14px 16px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-}
-
-.period-link{
-    text-decoration:none;
-    flex:1;
-}
-
-.period-left{
-    display:flex;
-    align-items:center;
-    gap:12px;
-}
-
-.period-icon{
-    width:42px;
-    height:42px;
-    border-radius:14px;
-    background:#f4f7fb;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-}
-
-.period-month{
-    display:block;
-    color:#374151;
-    font-size:14px;
-    font-weight:700;
-}
-
-.period-subtitle{
-    color:#98a2b3;
-    font-size:11px;
-}
-
-.period-right{
-    display:flex;
-    align-items:center;
-    gap:8px;
-}
-
-.period-total{
-    width:28px;
-    height:28px;
-    border-radius:999px;
-    background:#f3f4f6;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:11px;
-    font-weight:700;
-    color:#6b7280;
-    margin-left: 8px;
-}
-
-.active-period{
-    background:#3b82f6;
-    border-color:#3b82f6;
-}
-
-.active-period .period-month,
-.active-period .period-subtitle,
-.active-period i{
-    color:white !important;
-}
-
-.active-period .period-icon{
-    background:rgba(255,255,255,0.15);
-}
-
-.active-period .period-total{
-    background:rgba(255,255,255,0.2);
-    color:white;
-}
 
 .table-section{
     background:white;
@@ -1399,6 +1376,18 @@ loadMonths();
 
 .custom-table td:last-child{
     text-align:center;
+}
+.btn-locked {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 12px;
+    background: #f3f4f6;
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: not-allowed;
 }
 </style>
 

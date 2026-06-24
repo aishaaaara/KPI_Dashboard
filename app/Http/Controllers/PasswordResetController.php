@@ -18,51 +18,48 @@ class PasswordResetController extends Controller
         return view('auth.forgot-password');
     }
 
-    // Proses kirim email reset
     public function sendResetLink(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-        ]);
+{
+    $request->validate([
+        'email' => 'required|email',
+    ]);
 
-        $user = User::where('email', $request->email)->first();
+    $user = User::where('email', $request->email)->first();
 
-        // Selalu tampilkan pesan sukses meski email tidak ditemukan
-        // supaya tidak bisa ditebak email mana yang terdaftar
-        if (!$user) {
-            return back()->with(
-                'success',
-                'Jika email terdaftar, link reset password akan dikirim.'
-            );
-        }
-
-        $token = Str::random(64);
-
-        $user->update([
-            'reset_token'            => Hash::make($token),
-            'reset_token_expires_at' => now()->addMinutes(30),
-        ]);
-
-        $resetUrl = route('password.reset.form', [
-            'token' => $token,
-            'email' => $user->email,
-        ]);
-
-        Mail::to($user->email)->send(
-            new ResetPasswordMail($resetUrl, $user->name)
-        );
-
+    if (!$user) {
         return back()->with(
             'success',
-            'Link reset password telah dikirim ke email kamu.'
+            'Jika email terdaftar, link reset password akan dikirim.'
         );
     }
 
-    // Halaman reset password (dari link email)
-    public function showReset(Request $request)
+    $token = Str::random(64);
+
+    // Ganti update() pakai assignment langsung
+    $user->reset_token            = $token;
+    $user->reset_token_expires_at = now()->addMinutes(30);
+    $user->save();
+
+    $resetUrl = route('password.reset.form', [
+        'token' => $token,
+        'email' => $user->email,
+    ]);
+
+    Mail::to($user->email)->send(
+        new ResetPasswordMail($resetUrl, $user->name)
+    );
+
+    return back()->with(
+        'success',
+        'Link reset password telah dikirim ke email kamu.'
+    );
+}
+
+    // showReset — ambil token dari route parameter
+    public function showReset(Request $request, $token)
     {
         return view('auth.reset-password', [
-            'token' => $request->token,
+            'token' => $token,
             'email' => $request->email,
         ]);
     }
@@ -78,10 +75,11 @@ class PasswordResetController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
+        // resetPassword — bandingkan langsung
         if (
             !$user ||
             !$user->reset_token ||
-            !Hash::check($request->token, $user->reset_token) ||
+            $user->reset_token !== $request->token || // ← langsung compare, tidak Hash::check
             now()->isAfter($user->reset_token_expires_at)
         ) {
             return back()->with('error', 'Link reset password tidak valid atau sudah kadaluarsa.');

@@ -14,9 +14,14 @@ class WorkloadController extends Controller
  
 public function index(Request $request)
 {
-    $periods = Period::latest()->get();
+     $periods = Period::selectRaw("*, 
+        FIELD(month, 'January','February','March','April','May','June',
+        'July','August','September','October','November','December') as month_order")
+        ->orderBy('year', 'asc')
+        ->orderBy('month_order', 'asc')
+        ->get();
 
-    $selectedPeriod = $request->period_id ?? $periods->first()?->id;
+    $selectedPeriod = $request->period_id ?? $periods->last()?->id;
 
     $workloads = Workload::with(['member.position', 'period'])
         ->when($selectedPeriod, function ($query) use ($selectedPeriod) {
@@ -74,13 +79,14 @@ public function store(Request $request)
         );
 }
 
-public function update(
-    Request $request,
-    $id
-)
+public function update( Request $request, $id)
 {
     $workload = Workload::findOrFail($id);
+    $period   = Period::findOrFail($workload->period_id);
 
+    if ($this->isPeriodLocked($period)) {
+        return back()->with('error', 'Periode ini sudah terkunci dan tidak dapat diubah.');
+    }
     $workload->update([
         'all_task' => $request->all_task,
         'todo' => $request->todo,
@@ -121,8 +127,6 @@ public function destroyPeriod($id)
             'success',
             'Workload for the period deleted successfully'
         );
-
-
 }
 
 public function storePeriod(Request $request)
@@ -183,5 +187,17 @@ public function storePeriod(Request $request)
     );
 
     return redirect()->back()->with('success', 'New period added successfully');
+}
+
+private function isPeriodLocked(Period $period): bool
+{
+    $periodDate = \Carbon\Carbon::createFromDate(
+        $period->year,
+        date('n', strtotime($period->month)),
+        1
+    );
+
+    // Terkunci kalau bulannya sudah lewat dari bulan sekarang
+    return $periodDate->lt(now()->startOfMonth());
 }
 }

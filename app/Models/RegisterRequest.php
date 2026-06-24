@@ -11,19 +11,12 @@ class RegisterRequest extends Model
 protected $fillable = [
 
     'name',
-
     'email',
-
     'password',
-
     'status',
-
     'member_id',
-
     'approved_by',
-
     'approved_at',
-
     'rejection_reason'
 
 ];

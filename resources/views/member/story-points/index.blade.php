@@ -29,60 +29,37 @@
 
     </div>
 
-    {{-- PERIOD FILTER --}}
-    <div class="period-container">
+{{-- PERIOD FILTER --}}
+<div class="comm-period period-container">
 
-        <div class="period-wrapper" id="periodWrapper">
+    <button class="period-nav" onclick="scrollPeriod(-1)">
+        <i class="bi bi-chevron-left"></i>
+    </button>
+
+    <div class="period-wrapper" id="periodWrapper">
         @foreach($periods as $period)
             @php
                 $totalData = $storyPointCounts[$period->id] ?? 0;
             @endphp
 
+            <div class="period-card {{ $selectedPeriod == $period->id ? 'active-period' : '' }}"
+                 id="period-{{ $period->id }}">
 
-                <div class="period-card
-                    {{ $selectedPeriod == $period->id ? 'active-period' : '' }}">
+                <a href="?period_id={{ $period->id }}" class="period-link">
+                    <i class="bi bi-calendar3"></i>
+                    <span class="period-month">{{ substr($period->month, 0, 3) }} {{ $period->year }}</span>
+                </a>
 
-                    <a href="?period_id={{ $period->id }}"
-                       class="period-link">
-
-                        <div class="period-left">
-
-                            <div class="period-icon">
-                                <i class="bi bi-calendar-event"></i>
-                            </div>
-
-                            <div>
-
-                                <span class="period-month">
-
-                                    {{ substr($period->month,0,3) }}
-                                    {{ $period->year }}
-
-                                </span>
-                            </div>
-
-                        </div>
-
-                    </a>
-
-                    <div class="period-right">
-
-                        <span class="period-total">
-
-                            {{ $totalData }}
-
-                        </span>
-
-
-                    </div>
-
-                </div>
-
-            @endforeach
-
-        </div>
-
+                <span class="period-total">{{ $totalData }}</span>
+            </div>
+        @endforeach
     </div>
+
+    <button class="period-nav" onclick="scrollPeriod(1)">
+        <i class="bi bi-chevron-right"></i>
+    </button>
+
+</div>
 
     {{-- TABLE --}}
     <div class="table-section">
@@ -164,54 +141,54 @@
 
                         <td>
 
-    <span class="point-number">
+                            <span class="point-number">
 
-        {{ number_format($storyPoint->target) }}
+                                {{ number_format($storyPoint->target) }}
 
-    </span>
+                            </span>
 
-</td>
-<td>
+                        </td>
+                        <td>
 
-    <span class="point-number total-point">
+                            <span class="point-number total-point">
 
-        {{ number_format($storyPoint->totals) }}
+                                {{ number_format($storyPoint->totals) }}
 
-    </span>
+                            </span>
 
-</td>
+                        </td>
 
-                       <td>
+                                            <td>
 
-    <div class="achievement-wrapper">
+                            <div class="achievement-wrapper">
 
-        <div class="progress achievement-progress">
+                                <div class="progress achievement-progress">
 
-            <div
-                class="progress-bar"
-                style="width: {{ min($achievement,100) }}%">
-            </div>
+                                    <div
+                                        class="progress-bar"
+                                        style="width: {{ min($achievement,100) }}%">
+                                    </div>
 
-        </div>
+                                </div>
 
-        <span>
+                                <span>
 
-            {{ $storyPoint->summary }} %
-        </span>
+                                    {{ $storyPoint->summary }} %
+                                </span>
 
-    </div>
+                            </div>
 
-</td>
+                        </td>
 
-<td>
+                        <td>
 
-    <span class="status-badge {{ $statusClass }}">
-        {{ $status }}
-    </span>
+                            <span class="status-badge {{ $statusClass }}">
+                                {{ $status }}
+                            </span>
 
-</td>
+                        </td>
 
-</td>
+                        </td>
                         </td>
 
                     </tr>
@@ -293,6 +270,26 @@
         );
     }
 
+function scrollPeriod(direction) {
+    const wrapper = document.getElementById('periodWrapper');
+    wrapper.scrollBy({ left: direction * 200, behavior: 'smooth' });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const wrapper = document.getElementById('periodWrapper');
+    const active  = document.querySelector('.active-period');
+
+    if (!wrapper) return;
+
+    if (active) {
+        // Scroll ke period yang aktif
+        wrapper.scrollLeft = active.offsetLeft - (wrapper.offsetWidth / 2) + (active.offsetWidth / 2);
+    } else {
+        // Kalau tidak ada yang aktif, scroll ke paling kanan (terbaru)
+        wrapper.scrollLeft = wrapper.scrollWidth;
+    }
+});
+
 </script>
 
 <style>
@@ -350,102 +347,131 @@
     background:#2388f5;
 }
 
-.period-container{
-    margin-bottom:24px;
-}
-
-.period-wrapper {
+.comm-period.period-container {
     display: flex;
-    flex-direction: row-reverse;  /* ← tambah ini */
-    gap: 14px;
-    overflow-x: auto;
-    padding-bottom: 4px;
-    justify-content: flex-end;   /* ← supaya mulai dari kiri */
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 24px;
+    max-width: 100%;
+    overflow: hidden;
 }
 
-.period-card{
-    min-width:210px;
-    background:white;
-    border-radius:20px;
-    border:1px solid #edf0f5;
-    padding:14px 16px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
+.comm-period .period-wrapper {
+    display: flex;
+    gap: 6px;
+    overflow-x: hidden;
+    flex: 1;
+    scroll-behavior: smooth;
+    min-width: 0;
 }
 
-.period-link{
-    text-decoration:none;
-    flex:1;
+.comm-period .period-card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all .15s;
+    cursor: pointer;
 }
 
-.period-left{
-    display:flex;
-    align-items:center;
-    gap:12px;
+.comm-period .period-card:hover {
+    border-color: #2563eb;
+    background: #f0f6ff;
 }
 
-.period-icon{
-    width:42px;
-    height:42px;
-    border-radius:14px;
-    background:#f4f7fb;
-    display:flex;
-    align-items:center;
-    justify-content:center;
+.comm-period .active-period {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
 }
 
-.period-month{
-    display:block;
-    color:#374151;
-    font-size:14px;
-    font-weight:700;
+.comm-period .active-period .period-month,
+.comm-period .active-period .period-total,
+.comm-period .active-period i {
+    color: white !important;
 }
 
-.period-subtitle{
-    color:#98a2b3;
-    font-size:11px;
+.comm-period .period-link {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
-.period-right{
-    display:flex;
-    align-items:center;
-    gap:8px;
+.comm-period .period-link i {
+    font-size: 13px;
+    color: #6b7280;
 }
 
-.period-total{
-    width:28px;
-    height:28px;
-    border-radius:999px;
-    background:#f3f4f6;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:11px;
-    font-weight:700;
-    color:#6b7280;
-    margin-left: 8px;
+.comm-period .period-month {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
 }
 
-.active-period{
-    background:#3b82f6;
-    border-color:#3b82f6;
+.comm-period .period-total {
+    font-size: 11px;
+    font-weight: 700;
+    color: #6b7280;
+    background: #f3f4f6;
+    border-radius: 999px;
+    padding: 1px 7px;
+    min-width: 20px;
+    text-align: center;
 }
 
-.active-period .period-month,
-.active-period .period-subtitle,
-.active-period i{
-    color:white !important;
+.comm-period .active-period .period-total {
+    background: rgba(255,255,255,.25);
+    color: white;
 }
 
-.active-period .period-icon{
-    background:rgba(255,255,255,0.15);
+.comm-period .btn-delete-period {
+    background: transparent;
+    border: none;
+    color: #d1d5db;
+    font-size: 12px;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: color .15s;
+    line-height: 1;
+    width: auto;
+    height: auto;
+    border-radius: 0;
 }
 
-.active-period .period-total{
-    background:rgba(255,255,255,0.2);
-    color:white;
+.comm-period .btn-delete-period:hover {
+    color: #ef4444;
 }
+
+.comm-period .period-nav {
+    width: 30px;
+    height: 30px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all .15s;
+    font-size: 12px;
+}
+
+.comm-period .period-nav:hover {
+    border-color: #2563eb;
+    color: #2563eb;
+    background: #f0f6ff;
+}
+
 
 .table-section{
     background:white;

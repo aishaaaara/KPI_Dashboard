@@ -17,8 +17,9 @@ class PerformanceInsight extends Model
         'recommendation',
         'admin_notes',
         'is_sent',
-        'sent_at'
-
+        'sent_at',
+        'is_read',
+        'read_at',
     ];
 
     public function member()
