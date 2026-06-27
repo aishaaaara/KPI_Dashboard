@@ -10,21 +10,6 @@
     </div>
 </div>
 
-{{-- ===================== ALERT ===================== --}}
-@if (session('success'))
-    <div class="alert-success-bar">
-        <i class="bi bi-check-circle-fill"></i>
-        {{ session('success') }}
-    </div>
-@endif
-
-@if (session('error'))
-    <div class="alert-error-bar">
-        <i class="bi bi-exclamation-circle-fill"></i>
-        {{ session('error') }}
-    </div>
-@endif
-
 <div class="profile-grid">
 
     {{-- ===================== CARD KIRI: INFO MEMBER ===================== --}}

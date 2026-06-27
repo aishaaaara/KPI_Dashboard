@@ -2,65 +2,59 @@
 
 @section('content')
 
-{{-- ===================== HEADER ===================== --}}
-<div class="pi-header">
-    <div class="pi-header-text">
-        <h2>Performance Insight</h2>
-        <p>Generate dan kirim laporan KPI per anggota tim</p>
-    </div>
-</div>
-
-{{-- ===================== TOOLBAR ===================== --}}
-<div class="pi-toolbar">
-
-    <div class="toolbar-form">
-
-        {{-- Dropdown period: saat berubah, reload halaman dulu --}}
-        <select
-            id="period-select"
-            class="period-select"
-            onchange="onPeriodChange(this.value)"
-            aria-label="Pilih periode">
-
-            <option value="">-- Pilih Bulan --</option>
-
-            @foreach ($periods as $period)
-                <option
-                    value="{{ $period->id }}"
-                    {{ $selectedPeriod == $period->id ? 'selected' : '' }}>
-                    {{ $period->month }} {{ $period->year }}
-                </option>
-            @endforeach
-
-        </select>
-
-        {{-- Form generate — period_id diisi via JS --}}
-        <form
-            method="POST"
-            action="{{ route('performance-insight.generate') }}"
-            id="generate-form">
-
-            @csrf
-            <input type="hidden" name="period_id" id="generate-period-id" value="{{ $selectedPeriod }}">
-
-        <button type="submit" class="btn-generate">
-            <i class="bi bi-lightning-charge-fill"></i>
-            Generate
-        </button>
-
-        </form>
-
+    {{-- ===================== HEADER ===================== --}}
+    <div class="pi-header">
+        <div class="pi-header-text">
+            <h2>Performance Insight</h2>
+            <p>Generate dan kirim laporan KPI per anggota tim</p>
+        </div>
     </div>
 
-</div>
+    {{-- ===================== TOOLBAR ===================== --}}
+    <div class="pi-toolbar">
 
-{{-- ===================== SUCCESS ALERT ===================== --}}
-@if (session('success'))
-    <div class="alert-success-bar" role="alert">
-        <i class="bi bi-check-circle-fill"></i>
-        {{ session('success') }}
+        <div class="toolbar-form">
+
+            {{-- Dropdown period: saat berubah, reload halaman dulu --}}
+            <select
+                id="period-select"
+                class="period-select"
+                onchange="onPeriodChange(this.value)"
+                aria-label="Pilih periode">
+
+                <option value="">-- Pilih Bulan --</option>
+
+                @foreach ($periods as $period)
+                    <option
+                        value="{{ $period->id }}"
+                        {{ $selectedPeriod == $period->id ? 'selected' : '' }}>
+                        {{ $period->month }} {{ $period->year }}
+                    </option>
+                @endforeach
+
+            </select>
+
+            {{-- Form generate — period_id diisi via JS --}}
+            <form
+                method="POST"
+                action="{{ route('performance-insight.generate') }}"
+                id="generate-form">
+
+                @csrf
+                <input type="hidden" name="period_id" id="generate-period-id" value="{{ $selectedPeriod }}">
+
+            <button type="submit" class="btn-generate">
+                <i class="bi bi-lightning-charge-fill"></i>
+                Generate
+            </button>
+
+            </form>
+
+        </div>
+
     </div>
-@endif
+
+
 
 {{-- ===================== MAIN CONTENT ===================== --}}
 @if ($insights->isEmpty())
@@ -285,57 +279,57 @@
                     </div>
 
                     {{-- TASK SUMMARY --}}
-<div class="task-summary">
+                    <div class="task-summary">
 
-    <div class="task-box">
+                        <div class="task-box">
 
-        <div class="task-value">
+                            <div class="task-value">
 
-            {{ $insight->workloadData->all_task ?? 0 }}
+                                {{ $insight->workloadData->all_task ?? 0 }}
 
-        </div>
+                            </div>
 
-        <div class="task-label">
+                            <div class="task-label">
 
-            All Task
+                                All Task
 
-        </div>
+                            </div>
 
-    </div>
+                        </div>
 
-    <div class="task-box success">
+                        <div class="task-box success">
 
-        <div class="task-value">
+                            <div class="task-value">
 
-            {{ $insight->workloadData->done ?? 0 }}
+                                {{ $insight->workloadData->done ?? 0 }}
 
-        </div>
+                            </div>
 
-        <div class="task-label">
+                            <div class="task-label">
 
-            Done
+                                Done
 
-        </div>
+                            </div>
 
-    </div>
+                        </div>
 
-    <div class="task-box warning">
+                        <div class="task-box warning">
 
-        <div class="task-value">
+                            <div class="task-value">
 
-            {{ $insight->workloadData->review ?? 0 }}
+                                {{ $insight->workloadData->review ?? 0 }}
 
-        </div>
+                            </div>
 
-        <div class="task-label">
+                            <div class="task-label">
 
-            Review
+                                Review
 
-        </div>
+                            </div>
 
-    </div>
+                        </div>
 
-</div>
+                    </div>
 
                     {{-- Recommendation --}}
                     <div class="rec-box {{ $recClass }}">

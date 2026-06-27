@@ -3,21 +3,21 @@
 namespace App\Imports;
 
 use App\Models\Member;
-use App\Models\Position;
-use App\Models\Team;
-use App\Models\EmploymentType;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
-use Maatwebsite\Excel\Validators\Failure;
+use Maatwebsite\Excel\Concerns\WithMapping;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
-class MembersImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnFailure
+class MembersImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnFailure, WithMapping
 {
     use SkipsFailures;
 
+    private array $skippedNames = [];
+
+    // ── Helper: ekstrak ID dari string "1 - Nama" atau angka biasa ──
     private function extractId($value): ?int
     {
         if (empty($value)) return null;
@@ -28,6 +28,7 @@ class MembersImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnF
         return null;
     }
 
+    // ── Helper: parse tanggal dari Excel serial atau string ──
     private function parseDate($value): ?string
     {
         if (empty($value)) return null;
@@ -41,50 +42,88 @@ class MembersImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnF
         }
     }
 
-    public function model(array $row)
-{
-    if (empty($row['name'])) {
-        return null;
+    // ── Mapping: normalisasi row sebelum validasi & model ──
+    // Baris kosong (name kosong) di-return dengan semua null
+    // supaya tidak memicu validasi error
+    public function map($row): array
+    {
+        if (empty($row['name']) || trim($row['name']) === '') {
+            return [
+                'name'               => null,
+                'position_id'        => null,
+                'team_id'            => null,
+                'employment_type_id' => null,
+                'join_date'          => null,
+                'end_date'           => null,
+            ];
+        }
+
+        return [
+            'name'               => trim($row['name']),
+            'position_id'        => $row['position_id'] ?? null,
+            'team_id'            => $row['team_id'] ?? null,
+            'employment_type_id' => $row['employment_type_id'] ?? null,
+            'join_date'          => $row['join_date'] ?? null,
+            'end_date'           => $row['end_date'] ?? null,
+        ];
     }
 
-    // Ambil nomor EID tertinggi yang sudah ada
-    $lastEid = \App\Models\Member::orderByRaw('CAST(SUBSTRING(eid, 4) AS UNSIGNED) DESC')
-        ->value('eid');
+    // ── Model: proses tiap baris yang lolos validasi ──
+    public function model(array $row)
+    {
+        // Skip baris kosong (name null setelah mapping)
+        if (empty($row['name'])) {
+            return null;
+        }
 
-    $nextNumber = $lastEid
-        ? (int) substr($lastEid, 3) + 1
-        : 1;
+        // Skip & catat kalau nama sudah terdaftar
+        if (Member::where('name', $row['name'])->exists()) {
+            $this->skippedNames[] = '"' . $row['name'] . '" (nama sudah terdaftar)';
+            return null;
+        }
 
-    $eid = 'EMP' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+        // Skip & catat kalau data tidak lengkap
+        if (
+            empty($this->extractId($row['position_id'])) ||
+            empty($this->extractId($row['team_id'])) ||
+            empty($this->extractId($row['employment_type_id']))
+        ) {
+            $this->skippedNames[] = '"' . $row['name'] . '" (data tidak lengkap)';
+            return null;
+        }
 
-    return new Member([
-        'eid'                => $eid,
-        'name'               => $row['name'],
-        'position_id'        => $this->extractId($row['position_id']),
-        'team_id'            => $this->extractId($row['team_id']),
-        'employment_type_id' => $this->extractId($row['employment_type_id']),
-        'join_date'          => $this->parseDate($row['join_date'] ?? null),
-        'end_date'           => $this->parseDate($row['end_date'] ?? null),
-    ]);
-}
+        // Generate EID otomatis
+        $lastEid    = Member::orderByRaw('CAST(SUBSTRING(eid, 4) AS UNSIGNED) DESC')->value('eid');
+        $nextNumber = $lastEid ? (int) substr($lastEid, 3) + 1 : 1;
+        $eid        = 'EMP' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
 
+        return new Member([
+            'eid'                => $eid,
+            'name'               => $row['name'],
+            'position_id'        => $this->extractId($row['position_id']),
+            'team_id'            => $this->extractId($row['team_id']),
+            'employment_type_id' => $this->extractId($row['employment_type_id']),
+            'join_date'          => $this->parseDate($row['join_date'] ?? null),
+            'end_date'           => $this->parseDate($row['end_date'] ?? null),
+        ]);
+    }
+
+    // ── Validasi: semua nullable karena baris kosong di-handle di map() ──
     public function rules(): array
     {
         return [
-            'name'               => 'required|string',
-            'position_id'        => 'required',
-            'team_id'            => 'required',
-            'employment_type_id' => 'required',
+            'name'               => 'nullable|string',
+            'position_id'        => 'nullable',
+            'team_id'            => 'nullable',
+            'employment_type_id' => 'nullable',
+            'join_date'          => 'nullable',
+            'end_date'           => 'nullable',
         ];
     }
 
-    public function customValidationMessages(): array
+    // ── Getter untuk controller ──
+    public function getSkippedNames(): array
     {
-        return [
-            'name.required'               => 'Kolom name tidak boleh kosong',
-            'position_id.required'        => 'Kolom position_id tidak boleh kosong',
-            'team_id.required'            => 'Kolom team_id tidak boleh kosong',
-            'employment_type_id.required' => 'Kolom employment_type_id tidak boleh kosong',
-        ];
+        return $this->skippedNames;
     }
 }

@@ -4,12 +4,6 @@
 
 <div class="container-fluid py-4">
 
-    @if(session('success'))
-        <div class="alert-success-custom">
-            {{ session('success') }}
-        </div>
-    @endif
-
     {{-- HEADER --}}
     <div class="member-header">
 
@@ -191,9 +185,13 @@
 
                                             <div class="col-md-6 mb-3">
                                                 <label>Name *</label>
-                                                <input type="text" name="name"
-                                                       value="{{ $member->name }}"
-                                                       class="form-control custom-input">
+                                                <input type="text"
+                                                    name="name"
+                                                    id="editNameInput{{ $member->id }}"
+                                                    value="{{ $member->name }}"
+                                                    class="form-control custom-input"
+                                                    autocomplete="off">
+                                                <div id="editNameFeedback{{ $member->id }}" style="font-size:12px;margin-top:4px"></div>
                                             </div>
 
                                             <div class="col-md-6 mb-3">
@@ -299,9 +297,14 @@
 
                         <div class="col-md-6 mb-3">
                             <label>Name *</label>
-                            <input type="text" name="name"
-                                   class="form-control custom-input"
-                                   required placeholder="Enter Full Name">
+                            <input type="text"
+                                name="name"
+                                id="addNameInput"
+                                class="form-control custom-input"
+                                required
+                                placeholder="Enter Full Name"
+                                autocomplete="off">
+                            <div id="addNameFeedback" style="font-size:12px;margin-top:4px"></div>
                         </div>
 
                         <div class="col-md-6 mb-3">
@@ -545,8 +548,6 @@ body { background:#f5f6fa; overflow-x:hidden; }
 .btn-save   { background:#3498ff; color:white; border:none; padding:11px 22px; border-radius:12px; font-weight:600; }
 .btn-cancel { background:#f1f1f1; border:none; padding:11px 22px; border-radius:12px; }
 
-.alert-success-custom { border:none; border-radius:14px; padding:14px 18px; margin-bottom:20px; background:#e8fff1; color:#17a34a; font-weight:500; }
-
 /* Delete modal */
 .delete-icon-wrap {
     width:80px; height:80px; border-radius:50%;
@@ -624,6 +625,77 @@ function confirmDelete(id, name) {
     document.getElementById('deleteMemberName').textContent = name;
     new bootstrap.Modal(document.getElementById('deleteConfirmModal')).show();
 }
+
+// Auto dismiss alert setelah 4 detik
+const successAlert = document.getElementById('successAlert');
+if (successAlert) {
+    setTimeout(() => dismissAlert(), 4000);
+}
+
+function dismissAlert() {
+    const el = document.getElementById('successAlert');
+    if (!el) return;
+    el.classList.add('hide');
+    setTimeout(() => el.remove(), 300);
+}
+
+// ── CHECK NAME REAL-TIME ──────────────────────────────────
+let nameCheckTimer;
+
+function checkNameAvailability(inputEl, feedbackEl, excludeId = null) {
+    const name = inputEl.value.trim();
+
+    if (name.length < 2) {
+        feedbackEl.innerHTML = '';
+        inputEl.style.borderColor = '';
+        return;
+    }
+
+    clearTimeout(nameCheckTimer);
+    nameCheckTimer = setTimeout(() => {
+
+        const url = new URL('{{ route('admin.members.checkName') }}', window.location.origin);
+        url.searchParams.set('name', name);
+        if (excludeId) url.searchParams.set('exclude_id', excludeId);
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                if (data.exists) {
+                    feedbackEl.innerHTML = `<span style="color:#dc2626">
+                        ✕ Nama ini sudah terdaftar
+                    </span>`;
+                    inputEl.style.borderColor = '#dc2626';
+                } else {
+                    feedbackEl.innerHTML = `<span style="color:#16a34a">
+                        ✓ Nama tersedia
+                    </span>`;
+                    inputEl.style.borderColor = '#22c55e';
+                }
+            });
+
+    }, 400); // delay 400ms setelah berhenti ngetik
+}
+
+// Bind ke input Add Member
+const addNameInput    = document.getElementById('addNameInput');
+const addNameFeedback = document.getElementById('addNameFeedback');
+
+if (addNameInput) {
+    addNameInput.addEventListener('input', () => {
+        checkNameAvailability(addNameInput, addNameFeedback);
+    });
+}
+
+// Reset feedback saat modal Add ditutup
+document.getElementById('addMemberModal')?.addEventListener('hidden.bs.modal', () => {
+    if (addNameInput) {
+        addNameInput.value = '';
+        addNameInput.style.borderColor = '';
+    }
+    if (addNameFeedback) addNameFeedback.innerHTML = '';
+});
 </script>
+
 
 @endsection

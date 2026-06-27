@@ -71,12 +71,15 @@ class MemberController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required',
-            'position_id' => 'required',
-            'team_id' => 'required',
+            'name'               => 'required|unique:members,name', // ← tambah unique
+            'position_id'        => 'required',
+            'team_id'            => 'required',
             'employment_type_id' => 'required',
-
+        ], [
+            'name.required' => 'Nama wajib diisi.',
+            'name.unique'   => 'Member dengan nama ini sudah terdaftar.',
         ]);
+
     $lastEid = Member::orderByRaw('CAST(SUBSTRING(eid, 4) AS UNSIGNED) DESC')
         ->value('eid');
 
@@ -92,7 +95,8 @@ class MemberController extends Controller
         'end_date'           => $request->end_date,
     ]);
 
-    return redirect()->to('/admin/members');
+    return redirect()->to('/admin/members')
+        ->with('success', 'Member berhasil ditambahkan');
 
     }
 
@@ -101,12 +105,13 @@ class MemberController extends Controller
     $member = Member::findOrFail($id);
 
     $request->validate([
-    
-        'name' => 'required',
-        'position_id' => 'required',
-        'team_id' => 'required',
+        'name'               => 'required|unique:members,name,' . $id, // ← ignore ID sendiri
+        'position_id'        => 'required',
+        'team_id'            => 'required',
         'employment_type_id' => 'required',
-
+    ], [
+        'name.required' => 'Nama wajib diisi.',
+        'name.unique'   => 'Member dengan nama ini sudah terdaftar.',
     ]);
 
     $member->update([
@@ -164,19 +169,39 @@ class MemberController extends Controller
         $import = new MembersImport();
         Excel::import($import, $request->file('file'));
 
-        if ($import->failures()->isNotEmpty()) {
+        $skippedNames = $import->getSkippedNames();
+        $failures     = $import->failures();
+
+        if ($failures->isNotEmpty() || !empty($skippedNames)) {
+            $messages = [];
+
+            if (!empty($skippedNames)) {
+                $messages[] = 'Nama sudah terdaftar: ' . implode(', ', $skippedNames);
+            }
+
+            if ($failures->isNotEmpty()) {
+                $failRows = collect($failures)
+                    ->map(fn($f) => 'baris ' . $f->row() . ' (' . implode(', ', $f->errors()) . ')')
+                    ->unique()
+                    ->join(' | ');
+
+                $messages[] = 'Validasi gagal: ' . $failRows;
+            }
+
             return redirect()->to('/admin/members')
-                ->with('import_error', 'Beberapa data gagal diimport. Pastikan format file sesuai template.');
+                ->with('import_error', 'Import selesai dengan beberapa masalah. ' . implode('. ', $messages));
         }
 
+        // ← TAMBAH INI: redirect sukses
         return redirect()->to('/admin/members')
-            ->with('success', 'Data berhasil diimport');
+            ->with('success', 'Import berhasil!');
 
     } catch (\Exception $e) {
         return redirect()->to('/admin/members')
             ->with('import_error', 'File tidak valid atau format tidak sesuai. Gunakan template yang tersedia.');
     }
 }
+
 
 public function downloadTemplate()
 {
@@ -305,4 +330,14 @@ public function downloadTemplate()
     exit;
 }
 
+    public function checkName(Request $request)
+    {
+        $exists = Member::where('name', $request->name)
+            ->when($request->exclude_id, function ($q) use ($request) {
+                $q->where('id', '!=', $request->exclude_id);
+            })
+            ->exists();
+
+        return response()->json(['exists' => $exists]);
+    }
 }

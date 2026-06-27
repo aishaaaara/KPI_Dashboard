@@ -30,15 +30,16 @@ class PerformanceInsightController extends Controller
         $periods = Period::latest()->get();
 
         $insights = PerformanceInsight::with([
-                'member.position',
-                'period'
-            ])
-            ->where('member_id', $member->id)
-            ->where('is_sent', 1)
-            ->when($selectedPeriod, function ($query) use ($selectedPeriod) {
-                $query->where('period_id', $selectedPeriod);
-            })
-            ->get();
+        'member.position',
+        'period'
+                ])
+                ->where('member_id', $member->id)
+                ->where('is_sent', 1)
+                ->whereHas('period') // ← tambah ini
+                ->when($selectedPeriod, function ($query) use ($selectedPeriod) {
+                    $query->where('period_id', $selectedPeriod);
+                })
+                ->get();
 
         // Auto-mark as read saat member memilih periode dan data muncul
         if ($selectedPeriod) {

@@ -4,18 +4,7 @@
 
 <div class="container-fluid py-4">
 
-    {{-- ALERT --}}
-    @if(session('success'))
-        <div class="alert-success-custom">
-            {{ session('success') }}
-        </div>
-    @endif
 
-    @if(session('error'))
-        <div class="alert-error-custom">
-            {{ session('error') }}
-        </div>
-    @endif
 
     {{-- HEADER --}}
     <div class="communication-header">

@@ -24,14 +24,15 @@ class PerformanceInsightController extends Controller
     $insights = PerformanceInsight::with([
         'member.position',
         'period'
-    ])
-    ->whereHas('member')
-    ->when($selectedPeriod, function ($query) use ($selectedPeriod) {
-        $query->where('period_id', $selectedPeriod);
-    })
-    ->get()
-    ->unique('member_id');
-
+            ])
+            ->whereHas('member')
+            ->whereHas('period') // ← tambah ini
+            ->when($selectedPeriod, function ($query) use ($selectedPeriod) {
+                $query->where('period_id', $selectedPeriod);
+            })
+            ->get()
+            ->unique('member_id');
+    
     foreach ($insights as $insight) {
         $insight->workloadData = Workload::where('member_id', $insight->member_id)
             ->where('period_id', $insight->period_id)

@@ -20,7 +20,7 @@ use App\Http\Controllers\PasswordResetController;
 |--------------------------------------------------------------------------
 */
 
-use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\MemberController;
 use App\Http\Controllers\Admin\CommunicationController;
 use App\Http\Controllers\Admin\StoryPointController;
@@ -87,6 +87,7 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/members/export',   [MemberController::class, 'export'])->name('admin.members.export');
         Route::post('/members/import',  [MemberController::class, 'import'])->name('admin.members.import');
         Route::get('/members/template', [MemberController::class, 'downloadTemplate'])->name('admin.members.template');
+        Route::get('/members/check-name', [MemberController::class, 'checkName'])->name('admin.members.checkName');
 
     });
 
@@ -97,7 +98,7 @@ Route::middleware(['auth', 'role:admin'])
         /*
         | DASHBOARD
         */
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
 
         /*

@@ -135,7 +135,7 @@
                     <th style="width: 110px">Communication</th>
                     <th style="width: 110px">Story Point</th>
                     <th style="width: 110px">Workload</th>
-                    <th style="width: 130px">Average KPI</th>
+                    <th style="width: 130px">Overall Score</th>
                     <th style="width: 160px">Status</th>
                 </tr>
             </thead>

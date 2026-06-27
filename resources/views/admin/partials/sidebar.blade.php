@@ -145,7 +145,6 @@
         </ul>
 
 </div>
-
 {{-- USER PROFILE --}}
 <div class="sidebar-user">
 
@@ -165,203 +164,234 @@
 
     </a>
 
-    <form action="{{ route('logout') }}" method="POST">
-        @csrf
-        <button type="submit" class="logout-btn border-0 bg-transparent" title="Logout">
-            <i class="bi bi-box-arrow-right"></i>
-        </button>
-    </form>
+   
+    <button type="button"
+            class="logout-btn border-0 bg-transparent"
+            title="Logout"
+            data-bs-toggle="modal"
+            data-bs-target="#logoutConfirmModal">
+        <i class="bi bi-box-arrow-right"></i>
+    </button>
 
 </div>
 
 </div>
+{{-- MODAL KONFIRMASI LOGOUT --}}
+<div class="modal fade" id="logoutConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:400px">
+        <div class="modal-content" style="border:none; border-radius:24px; overflow:hidden;">
+            <div class="modal-body text-center" style="padding:40px 32px 32px">
 
+                <div class="logout-icon-wrap">
+                    <i class="bi bi-box-arrow-right"></i>
+                </div>
+
+                <h5 class="logout-title">Konfirmasi Logout</h5>
+
+                <p class="logout-msg">
+                    Apakah kamu yakin ingin keluar dari sesi ini?
+                    <br>
+                    <span style="color:#6b7280; font-size:12px;">
+                        Kamu perlu login kembali untuk mengakses sistem.
+                    </span>
+                </p>
+
+                <div class="logout-actions">
+                    <button type="button" class="btn-logout-cancel" data-bs-dismiss="modal">
+                        Batal
+                    </button>
+
+                    <form action="{{ route('logout') }}" method="POST" style="margin:0">
+                        @csrf
+                        <button type="submit" class="btn-logout-confirm">
+                            <i class="bi bi-box-arrow-right"></i>
+                            Ya, Logout
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
 
 <style>
-
-.sidebar{
-    width:260px;
-    height:100vh;
-    background:#082B5B;
-    padding:24px 18px;
-    color:white;
-    position:sticky;
-    top:0;
-    transition:0.3s;
-    overflow:hidden;
+.sidebar {
+    width: 260px;
+    height: 100vh;
+    background: #082B5B;
+    padding: 24px 18px 18px;
+    color: white;
+    position: sticky;
+    top: 0;
+    transition: 0.3s;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 /* COLLAPSE */
-.sidebar.collapsed{
-    width:88px;
+.sidebar.collapsed {
+    width: 88px;
 }
 
 /* TOP */
-.sidebar-top{
-    display:flex;
-    align-items:flex-start;
-    justify-content:space-between;
-    margin-bottom:30px;
+.sidebar-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    flex-shrink: 0; /* tidak boleh menyusut */
 }
 
 /* LOGO */
-.logo-box{
-    transition:0.3s;
+.logo-box { transition: 0.3s; }
+
+.logo-box h4 {
+    font-size: 18px;
+    margin-bottom: 4px;
+    font-weight: 700;
+    white-space: nowrap;
 }
 
-.logo-box h4{
-    font-size:18px;
-    margin-bottom:4px;
-    font-weight:700;
-    white-space:nowrap;
-}
-
-.logo-box small{
-    opacity:0.7;
-    font-size:13px;
-    white-space:nowrap;
+.logo-box small {
+    opacity: 0.7;
+    font-size: 13px;
+    white-space: nowrap;
 }
 
 /* HIDE TEXT */
 .sidebar.collapsed .logo-text,
 .sidebar.collapsed .logo-sub,
 .sidebar.collapsed .menu-title,
-.sidebar.collapsed .sidebar-menu span{
-    display:none;
+.sidebar.collapsed .sidebar-menu span {
+    display: none;
+}
+
+/* ── INI YANG FIX ── area menu bisa scroll, user card tetap di bawah */
+.sidebar > div:first-child {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0; /* wajib ada supaya flex mau scroll */
+    scrollbar-width: none;
+    padding-bottom: 8px;
+}
+
+.sidebar > div:first-child::-webkit-scrollbar {
+    display: none;
 }
 
 /* MENU TITLE */
-.menu-title{
-    font-size:12px;
-    opacity:0.6;
-    margin-bottom:10px;
-    margin-top:24px;
-    text-transform:uppercase;
-    letter-spacing:1px;
-    transition:0.3s;
+.menu-title {
+    font-size: 12px;
+    opacity: 0.6;
+    margin-bottom: 10px;
+    margin-top: 24px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    flex-shrink: 0;
 }
 
 /* MENU */
-.sidebar-menu{
-    list-style:none;
-    padding:0;
-    margin:0;
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
 
-.sidebar-menu li{
-    margin-bottom:10px;
+.sidebar-menu li {
+    margin-bottom: 10px;
 }
 
-.sidebar-menu a{
-    text-decoration:none;
-    color:white;
-    display:flex;
-    align-items:center;
-    gap:14px;
-    padding:12px 14px;
-    border-radius:14px;
-    transition:0.3s;
-    font-size:14px;
-    font-weight:500;
-    white-space:nowrap;
+.sidebar-menu a {
+    text-decoration: none;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    transition: 0.3s;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
 }
 
-/* CENTER ICON */
-.sidebar.collapsed .sidebar-menu a{
-    width:56px;
-    height:56px;
-    margin:auto;
-    padding:0;
-    justify-content:center;
-    border-radius:18px;
-
+/* CENTER ICON saat collapsed */
+.sidebar.collapsed .sidebar-menu a {
+    width: 48px;        /* ganti dari 56px */
+    height: 48px;       /* ganti dari 56px */
+    margin: 0 auto;     /* ganti dari auto */
+    padding: 0;
+    justify-content: center;
+    border-radius: 18px;
 }
+
+.sidebar.collapsed .sidebar-menu i {
+    margin: 0;
+    min-width: auto;
+    font-size: 20px;
+}
+
+.sidebar.collapsed .sidebar-menu a.active {
+    background: #0F4C9C;
+    color: white;
+    
+}
+
+.sidebar.collapsed .sidebar-menu li {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 14px;
+}
+
+.sidebar.collapsed .toggle-btn { margin: auto; }
+.sidebar.collapsed .sidebar-top { justify-content: center; }
+
+/* HOVER & ACTIVE */
+.sidebar-menu a:hover { background: #0F4C9C; color: white; }
+.sidebar-menu .active { background: #0F4C9C; color: white; }
+
 /* ICON */
-.sidebar.collapsed .sidebar-menu i{
-    margin:0;
-    min-width:auto;
-    font-size:20px;
-}
-
-/* ACTIVE */
-.sidebar.collapsed .sidebar-menu a.active{
-    background:#0F4C9C;
-    color:white;
-}
-
-/* SPACING */
-.sidebar.collapsed .sidebar-menu li{
-    margin-bottom:14px;
+.sidebar-menu i {
+    font-size: 18px;
+    min-width: 20px;
 }
 
 /* TOGGLE BUTTON */
-.sidebar.collapsed .toggle-btn{
-    margin:auto;
-}
-.sidebar.collapsed .sidebar-top{
-    justify-content:center;
-}
-/* HOVER */
-.sidebar-menu a:hover{
-    background:#0F4C9C;
-    color:white;
-}
-
-.sidebar-menu .active{
-    background:#0F4C9C;
-    color:white;
-}
-
-/* ICON */
-.sidebar-menu i{
-    font-size:18px;
-    min-width:20px;
+.toggle-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 12px;
+    background: #0F4C9C;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    cursor: pointer;
+    transition: 0.3s;
+    flex-shrink: 0;
 }
 
-/* TOGGLE BUTTON */
-.toggle-btn{
-    width:40px;
-    height:40px;
-    border:none;
-    border-radius:12px;
-    background:#0F4C9C;
-    color:white;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:22px;
-    cursor:pointer;
-    transition:0.3s;
-}
-
-.toggle-btn:hover{
-    background:#1a5db5;
-}
+.toggle-btn:hover { background: #1a5db5; }
 
 /* MOBILE */
-@media(max-width:768px){
-
-    .sidebar{
-        position:fixed;
-        z-index:999;
-        left:-260px;
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        z-index: 999;
+        left: -260px;
     }
-
-    .sidebar.show{
-        left:0;
-    }
-
-}
-/* PUSH USER TO BOTTOM */
-.sidebar{
-    display:flex;
-    flex-direction:column;
-    justify-content:space-between;
+    .sidebar.show { left: 0; }
 }
 
-/* USER CARD */
+/* USER CARD — flex-shrink:0 supaya tidak terpotong */
 .sidebar-user {
-    margin-top: 30px;
+    margin-top: 12px;
+    flex-shrink: 0; /* ← kunci utama, tidak boleh menyusut */
     background: white;
     border-radius: 12px;
     padding: 10px 12px;
@@ -371,7 +401,6 @@
     gap: 8px;
 }
 
-/* USER INFO — sekarang jadi link */
 .user-info {
     display: flex;
     align-items: center;
@@ -385,11 +414,8 @@
     transition: background .15s;
 }
 
-.user-info:hover {
-    background: #f3f4f6;
-}
+.user-info:hover { background: #f3f4f6; }
 
-/* AVATAR */
 .user-avatar {
     font-size: 34px;
     color: #6b7280;
@@ -398,11 +424,8 @@
     transition: color .15s;
 }
 
-.user-info:hover .user-avatar {
-    color: #2563eb;
-}
+.user-info:hover .user-avatar { color: #2563eb; }
 
-/* DETAIL */
 .user-detail {
     display: flex;
     flex-direction: column;
@@ -423,7 +446,6 @@
     font-size: 11px;
 }
 
-/* LOGOUT */
 .logout-btn {
     color: #9ca3af;
     font-size: 20px;
@@ -443,30 +465,86 @@
 
 /* COLLAPSED */
 .sidebar.collapsed .user-detail { display: none; }
-
-.sidebar.collapsed .sidebar-user {
-    justify-content: center;
-    padding: 10px;
-}
-
+.sidebar.collapsed .sidebar-user { justify-content: center; padding: 10px; }
 .sidebar.collapsed .logout-btn { display: none; }
+.sidebar.collapsed .user-info { margin: 0; padding: 0; }
 
-.sidebar.collapsed .user-info {
-    margin: 0;
-    padding: 0;
+/* ── LOGOUT MODAL ── */
+.logout-icon-wrap {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #FEF3C7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
 }
-/* Bagian atas (logo + menu) bisa scroll
-.sidebar > div:first-child {
+
+.logout-icon-wrap i {
+    font-size: 30px;
+    color: #D97706;
+}
+
+.logout-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 10px;
+}
+
+.logout-msg {
+    font-size: 14px;
+    color: #6B7280;
+    line-height: 1.6;
+    margin-bottom: 28px;
+}
+
+.logout-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.btn-logout-cancel {
     flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    scrollbar-width: none;
-    min-height: 0; /* penting! tanpa ini flex tidak mau scroll */
+    height: 42px;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 12px;
+    background: #fff;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .15s;
 }
 
-.sidebar > div:first-child::-webkit-scrollbar {
-    display: none;
-} */
+.btn-logout-cancel:hover {
+    background: #F3F4F6;
+}
+
+.btn-logout-confirm {
+    flex: 1;
+    height: 42px;
+    border: none;
+    border-radius: 12px;
+    background: #D97706;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: background .15s;
+    width: 100%;
+}
+
+.btn-logout-confirm:hover {
+    background: #B45309;
+}
+
 </style>
 
 <script>
@@ -490,6 +568,22 @@ userBtn.addEventListener('click', (e) => {
         sidebar.classList.remove('collapsed');
     }
     // Kalau sidebar sudah terbuka → link berjalan normal ke /admin/profile
+    
 });
+
+// Klik di luar sidebar → auto collapse/hide
+document.addEventListener('click', (e) => {
+    // Cek apakah klik di dalam sidebar atau tidak
+    if (sidebar.contains(e.target)) return;
+
+    if (window.innerWidth <= 768) {
+        // Mobile: tutup sidebar
+        sidebar.classList.remove('show');
+    } else {
+        // Desktop: collapse sidebar
+        sidebar.classList.add('collapsed');
+    }
+});
+
 
 </script>
