@@ -56,7 +56,7 @@ class PerformanceInsightController extends Controller
             if ($alreadySent) {
         return redirect()
             ->route('performance-insight.index', ['period_id' => $periodId])
-            ->with('error', 'Tidak bisa generate ulang — sebagian insight di periode ini sudah dikirim ke member');
+            ->with('error', 'Tidak bisa generate ulang, sebagian insight di periode ini sudah dikirim ke member');
     }
 
         PerformanceInsight::where(
