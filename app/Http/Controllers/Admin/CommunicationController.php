@@ -27,7 +27,14 @@ class CommunicationController extends Controller
             $query->where('period_id', $selectedPeriod);
         })
         ->latest()
-        ->get();
+        ->get()
+        ->map(function ($comm) {                          // ← tambah ini
+            $comm->clarity_class       = $this->getScoreClass($comm->clarity);
+            $comm->responsiveness_class = $this->getScoreClass($comm->responsiveness);
+            $comm->collaboration_class = $this->getScoreClass($comm->collaboration);
+            $comm->overall_class       = $this->getOverallClass($comm->overall_score);
+            return $comm;
+        });
 
     $existingPeriods = Period::select('month', 'year')->get();
 
@@ -233,22 +240,19 @@ public function destroy($id)
         );
 }
 
-public function destroyPeriod($id)
-{
-    Communication::where(
-        'period_id',
-        $id
-    )->delete();
+    public function destroyPeriod($id)
+    {
+        Communication::where( 'period_id', $id )->delete();
 
-    Period::findOrFail($id)->delete();
+        Period::findOrFail($id)->delete();
 
-    return redirect()
-        ->back()
-        ->with(
-            'success',
-            'Period deleted successfully'
-        );
-}
+        return redirect()
+            ->back()
+            ->with(
+                'success',
+                'Period deleted successfully'
+            );
+    }
 
     private function isPeriodLocked(Period $period): bool
 {
@@ -261,4 +265,18 @@ public function destroyPeriod($id)
     // Terkunci kalau bulannya sudah lewat dari bulan sekarang
     return $periodDate->lt(now()->startOfMonth());
 }
+
+    private function getScoreClass(float $score): string
+    {
+        if ($score >= 90) return 'green';
+        if ($score >= 80) return 'yellow';
+        return 'red';
+    }
+
+    private function getOverallClass(float $score): string
+    {
+        if ($score >= 90) return 'score-good';
+        if ($score >= 80) return 'score-medium';
+        return 'score-low';
+    }
 }

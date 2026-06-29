@@ -133,48 +133,55 @@
 
             @foreach ($insights as $insight)
 
-                @php
-                    $comm    = $insight->communication_score;
-                    $sp      = $insight->story_point_score;
-                    $wl      = $insight->workload_score;
-                    $overall = $insight->overall_score;
+                    @php
+                        $overall = $insight->overall_score;
+                        $comm    = $insight->communication_score;
+                        $sp      = $insight->story_point_score;
+                        $wl      = $insight->workload_score;
 
-                    [$statusLabel, $statusClass] = match (true) {
-                        $overall >= 90 => ['Excellent',   'badge--success'],
-                        $overall >= 80 => ['Good',         'badge--primary'],
-                        $overall >= 70 => ['Need Improve', 'badge--warning'],
-                        default        => ['Critical',     'badge--danger'],
-                    };
+                        if ($overall >= 90)     { $statusLabel = 'Excellent';    $statusClass = 'badge--success'; }
+                        elseif ($overall >= 80) { $statusLabel = 'Good';         $statusClass = 'badge--primary'; }
+                        elseif ($overall >= 70) { $statusLabel = 'Need Improve'; $statusClass = 'badge--warning'; }
+                        else                    { $statusLabel = 'Critical';     $statusClass = 'badge--danger';  }
 
-                    [$recClass, $recIcon, $recText] = match ($insight->recommendation) {
-                        'Excellent Performance' => [
-                            'rec--success', 'bi-check-circle',
-                            'Performa luar biasa! Pertahankan konsistensi dan jadilah mentor tim.',
-                        ],
-                        'Good Performance' => [
-                            'rec--info', 'bi-lightbulb',
-                            'Performa baik. Identifikasi satu aspek terlemah dan fokus perbaiki bulan depan.',
-                        ],
-                        'Need Improvement' => [
-                            'rec--warning', 'bi-exclamation-triangle',
-                            'Beberapa aspek KPI perlu ditingkatkan. Diskusikan hambatan dengan tim lead secepatnya.',
-                        ],
-                        default => [
-                            'rec--danger', 'bi-exclamation-circle',
-                            'KPI di bawah target secara keseluruhan. Diperlukan evaluasi mendalam bersama manajer.',
-                        ],
-                    };
+                        if ($comm >= 85)     $barComm = 'fill--success';
+                        elseif ($comm >= 70) $barComm = 'fill--warning';
+                        else                 $barComm = 'fill--danger';
 
-                    $barComm = $comm >= 85 ? 'fill--success' : ($comm >= 70 ? 'fill--warning' : 'fill--danger');
-                    $barSp   = $sp   >= 85 ? 'fill--success' : ($sp   >= 70 ? 'fill--warning' : 'fill--danger');
-                    $barWl   = $wl   >= 85 ? 'fill--success' : ($wl   >= 70 ? 'fill--warning' : 'fill--danger');
+                        if ($sp >= 85)       $barSp = 'fill--success';
+                        elseif ($sp >= 70)   $barSp = 'fill--warning';
+                        else                 $barSp = 'fill--danger';
 
-                    $nameParts = explode(' ', $insight->member->name);
-                    $initials  = strtoupper(
-                        substr($nameParts[0], 0, 1) .
-                        (isset($nameParts[1]) ? substr($nameParts[1], 0, 1) : '')
-                    );
-                @endphp
+                        if ($wl >= 85)       $barWl = 'fill--success';
+                        elseif ($wl >= 70)   $barWl = 'fill--warning';
+                        else                 $barWl = 'fill--danger';
+
+                        if ($insight->recommendation === 'Excellent Performance') {
+                            $recClass = 'rec--success'; $recIcon = 'bi-check-circle';
+                            $recText  = 'Performa luar biasa! Pertahankan konsistensi dan jadilah mentor tim.';
+                        } elseif ($insight->recommendation === 'Good Performance') {
+                            $recClass = 'rec--info'; $recIcon = 'bi-lightbulb';
+                            $recText  = 'Performa baik. Identifikasi satu aspek terlemah dan fokus perbaiki bulan depan.';
+                        } elseif ($insight->recommendation === 'Need Improvement') {
+                            $recClass = 'rec--warning'; $recIcon = 'bi-exclamation-triangle';
+                            $recText  = 'Beberapa aspek KPI perlu ditingkatkan. Diskusikan hambatan dengan tim lead secepatnya.';
+                        } else {
+                            $recClass = 'rec--danger'; $recIcon = 'bi-exclamation-circle';
+                            $recText  = 'KPI di bawah target secara keseluruhan. Diperlukan evaluasi mendalam bersama manajer.';
+                        }
+
+                        $nameParts = explode(' ', $insight->member->name ?? '');
+                        $initials  = strtoupper(
+                            substr($nameParts[0] ?? '', 0, 1) .
+                            (isset($nameParts[1]) ? substr($nameParts[1], 0, 1) : '')
+                        );
+
+
+                        $canResend = $insight->is_sent &&
+                                    !$insight->is_read &&
+                                    $insight->sent_at &&
+                                    \Carbon\Carbon::parse($insight->sent_at)->diffInMinutes(now()) >= 5;
+                    @endphp
 
                 <div
                     class="m-card {{ $insight->is_sent ? 'm-card--sent' : '' }}"
@@ -183,12 +190,6 @@
                     {{-- Checkbox + Header --}}
                 <div class="m-card-top">
 
-                    @php
-                        $canResend = $insight->is_sent &&
-                                    !$insight->is_read &&
-                                    $insight->sent_at &&
-                                    \Carbon\Carbon::parse($insight->sent_at)->diffInMinutes(now()) >= 5;
-                    @endphp
                     <input
                         type="checkbox"
                         name="selected[]"

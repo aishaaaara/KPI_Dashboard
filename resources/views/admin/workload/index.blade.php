@@ -65,13 +65,17 @@
 
                 <span class="period-total">{{ $totalData }}</span>
 
-                <form action="{{ route('workload.period.destroy', $period->id) }}" method="POST" style="margin:0">
+             
+                <button class="btn-delete-period" type="button"
+                        onclick="confirmDeletePeriod({{ $period->id }}, '{{ substr($period->month, 0, 3) }} {{ $period->year }}')">
+                    <i class="bi bi-trash3"></i>
+                </button>
+                <form id="deletePeriodForm-{{ $period->id }}"
+                    action="{{ route('workload.period.destroy', $period->id) }}"
+                    method="POST"
+                    style="display:none">
                     @csrf
                     @method('DELETE')
-                    <button class="btn-delete-period" type="submit"
-                            onclick="return confirm('Delete this period?')">
-                        <i class="bi bi-trash3"></i>
-                    </button>
                 </form>
 
             </div>
@@ -394,78 +398,46 @@
 @endforeach
 
 {{-- MODAL ADD MONTH --}}
-<div class="modal fade"
-     id="addPeriodModal"
-     tabindex="-1"
-     aria-hidden="true">
+    <div class="modal fade" id="addPeriodModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content custom-modal">
 
-    <div class="modal-dialog modal-dialog-centered">
+                <form action="{{ route('workload.period.store') }}" method="POST">
+                    @csrf
 
-        <div class="modal-content custom-modal">
+                    <div class="modal-header border-0">
+                        <h4 class="fw-bold">Add New Month</h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
 
-<form action="{{ route('workload.period.store') }}"
-      method="POST">
+                    <div class="modal-body">
 
-    @csrf
+                        <div class="mb-3">
+                            <label class="form-label">Month</label>
+                            <select id="monthSelect" name="month" class="form-select custom-input" required></select>
+                        </div>
 
-    {{-- MONTH --}}
-    <div class="mb-3">
+                        <div class="mb-3">
+                            <label class="form-label">Year</label>
+                            <select id="yearSelect" name="year" class="form-select custom-input" required>
+                                @for($year = now()->year; $year <= now()->year + 5; $year++)
+                                    <option value="{{ $year }}">{{ $year }}</option>
+                                @endfor
+                            </select>
+                        </div>
 
-        <label class="form-label">
-            Month
-        </label>
+                    </div>
 
-        <select
-            id="monthSelect"
-            name="month"
-            class="form-select"
-            required>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn-save">Save Month</button>
+                    </div>
 
-        </select>
+                </form>
 
-    </div>
-
-    {{-- YEAR --}}
-    <div class="mb-3">
-
-        <label class="form-label">
-            Year
-        </label>
-
-        <select
-            id="yearSelect"
-            name="year"
-            class="form-select"
-            required>
-
-            @for(
-                $year = now()->year;
-                $year <= now()->year + 5;
-                $year++
-            )
-
-                <option value="{{ $year }}">
-                    {{ $year }}
-                </option>
-
-            @endfor
-
-        </select>
-
-    </div>
-
-    <button type="submit"
-            class="btn btn-primary">
-        Save
-    </button>
-
-</form>
-
+            </div>
         </div>
-
     </div>
-
-</div>
 
 {{-- MODAL ADD WORKLOAD --}}
 <div class="modal fade"
@@ -662,6 +634,40 @@
 
 </div>
 
+{{-- MODAL DELETE PERIOD --}}
+<div class="modal fade" id="deletePeriodModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:400px">
+        <div class="modal-content" style="border:none; border-radius:24px; overflow:hidden;">
+            <div class="modal-body text-center" style="padding:40px 32px 32px">
+
+                <div class="delete-period-icon-wrap">
+                    <i class="bi bi-calendar-x-fill"></i>
+                </div>
+
+                <h5 class="delete-title">Delete Period</h5>
+
+                <p class="delete-msg">
+                    Are you sure you want to delete period
+                    <strong id="deletePeriodLabel"></strong>?
+                    <br>
+                    <span style="color:#ef4444; font-size:12px;">
+                        All workload data in this period will also be deleted.
+                    </span>
+                </p>
+
+                <div class="delete-actions">
+                    <button type="button" class="btn-del-cancel" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn-del-confirm" id="btnConfirmDeletePeriod">
+                        <i class="bi bi-trash3"></i>
+                        Yes, Delete
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- SCRIPT --}}
 <script>
 
@@ -789,6 +795,19 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
+let deletePeriodTargetId = null;
+
+function confirmDeletePeriod(id, label) {
+    deletePeriodTargetId = id;
+    document.getElementById('deletePeriodLabel').textContent = label;
+    new bootstrap.Modal(document.getElementById('deletePeriodModal')).show();
+}
+
+document.getElementById('btnConfirmDeletePeriod').addEventListener('click', function () {
+    if (deletePeriodTargetId) {
+        document.getElementById('deletePeriodForm-' + deletePeriodTargetId).submit();
+    }
+});
 </script>
 
 <style>
@@ -1378,6 +1397,42 @@ document.addEventListener('DOMContentLoaded', function () {
     justify-content: center;
     cursor: not-allowed;
 }
+.delete-period-icon-wrap {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #fef2f2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    border: 6px solid #fee2e2;
+}
+.delete-period-icon-wrap i { font-size: 30px; color: #ef4444; }
+
+.delete-title  { font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 10px; }
+.delete-msg    { font-size: 13px; color: #6b7280; line-height: 1.7; margin-bottom: 28px; }
+.delete-actions { display: flex; gap: 10px; justify-content: center; }
+
+.btn-del-cancel {
+    height: 42px; padding: 0 24px;
+    border: 1px solid #e5e7eb; border-radius: 12px;
+    background: #fff; color: #374151;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: background .15s;
+}
+.btn-del-cancel:hover { background: #f3f4f6; }
+
+.btn-del-confirm {
+    height: 42px; padding: 0 24px;
+    border: none; border-radius: 12px;
+    background: #ef4444; color: #fff;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 7px;
+    transition: background .15s;
+}
+.btn-del-confirm:hover { background: #dc2626; }
 </style>
 
 @endsection

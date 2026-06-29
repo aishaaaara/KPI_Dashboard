@@ -58,13 +58,19 @@
 
                     <span class="period-total">{{ $totalData }}</span>
 
-                    <form action="{{ route('story-points.period.destroy', $period->id) }}" method="POST" style="margin:0">
+                    {{-- SESUDAH --}}
+                    <button class="btn-delete-period" type="button"
+                            onclick="confirmDeletePeriod({{ $period->id }}, '{{ substr($period->month, 0, 3) }} {{ $period->year }}')">
+                        <i class="bi bi-trash3"></i>
+                    </button>
+
+                    {{-- Form hidden, dipanggil saat konfirmasi --}}
+                    <form id="deletePeriodForm-{{ $period->id }}"
+                        action="{{ route('story-points.period.destroy', $period->id) }}"
+                        method="POST"
+                        style="display:none">
                         @csrf
                         @method('DELETE')
-                        <button class="btn-delete-period" type="submit"
-                                onclick="return confirm('Delete this period?')">
-                            <i class="bi bi-trash3"></i>
-                        </button>
                     </form>
 
                 </div>
@@ -99,34 +105,14 @@
                 <tbody>
 
                     @forelse($storyPoints as $storyPoint)
-
-                        @php
-                            $achievement = $storyPoint->target > 0
-                                ? round(($storyPoint->totals / $storyPoint->target) * 100)
-                                : 0;
-
-                            $status = $achievement >= 110 ? 'Exceeded' :
-                                ($achievement >= 90 ? 'Achieved' :
-                                ($achievement >= 75 ? 'Near Target' : 'Below Target'));
-
-                            $statusClass = $achievement >= 110 ? 'status-success' :
-                                ($achievement >= 90 ? 'status-primary' :
-                                ($achievement >= 75 ? 'status-warning' : 'status-danger'));
-
-                            $periodDate = \Carbon\Carbon::createFromDate(
-                                $storyPoint->period->year,
-                                date('n', strtotime($storyPoint->period->month)),
-                                1
-                            );
-                            $isLocked = $periodDate->lt(now()->startOfMonth());
-                        @endphp
-
                         <tr>
 
+                            {{-- EID --}}
                             <td>
                                 <div class="eid-box">{{ $storyPoint->member->eid }}</div>
                             </td>
 
+                            {{-- MEMBER --}}
                             <td>
                                 <div class="member-box">
                                     <div>
@@ -136,10 +122,12 @@
                                 </div>
                             </td>
 
+                            {{-- TARGET --}}
                             <td>
                                 <span class="point-number">{{ number_format($storyPoint->target) }}</span>
                             </td>
 
+                            {{-- TOTAL --}}
                             <td>
                                 <span class="point-number total-point">{{ number_format($storyPoint->totals) }}</span>
                             </td>
@@ -147,20 +135,22 @@
                             <td>
                                 <div class="achievement-wrapper">
                                     <div class="progress achievement-progress">
-                                        <div class="progress-bar" style="width: {{ min($achievement,100) }}%"></div>
+                                        <div class="progress-bar" style="width: {{ min($storyPoint->achievement_pct, 100) }}%"></div>
                                     </div>
                                     <span>{{ $storyPoint->summary }}%</span>
                                 </div>
                             </td>
 
                             <td>
-                                <span class="status-badge {{ $statusClass }}">{{ $status }}</span>
+                                <span class="status-badge {{ $storyPoint->achievement_result['class'] }}">
+                                    {{ $storyPoint->achievement_result['label'] }}
+                                </span>
                             </td>
 
+                            {{-- ACTION ← gantikan td action lama (hapus @php $isLocked di dalamnya) --}}
                             <td>
                                 <div class="action-group">
-
-                                    @if (!$isLocked)
+                                    @if (!$storyPoint->is_locked)
                                         <button type="button" class="btn-edit"
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#editModal{{ $storyPoint->id }}">
@@ -175,8 +165,7 @@
                             </td>
 
                         </tr>
-
-                    @empty
+                        @empty
 
                         <tr>
                             <td colspan="7" class="empty-data">
@@ -226,7 +215,7 @@
                         <input type="number"
                                name="target"
                                class="form-control custom-input"
-                               value="{{ $storyPoint->target }}"
+                               value="{{ (int) $storyPoint->target }}"
                                required>
                     </div>
 
@@ -235,7 +224,7 @@
                         <input type="number"
                                name="totals"
                                class="form-control custom-input"
-                               value="{{ $storyPoint->totals }}"
+                               value="{{ (int) $storyPoint->totals }}"
                                required>
                     </div>
 
@@ -361,6 +350,39 @@
     </div>
 </div>
 
+    {{-- MODAL DELETE PERIOD --}}
+    <div class="modal fade" id="deletePeriodModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width:400px">
+            <div class="modal-content" style="border:none; border-radius:24px; overflow:hidden;">
+                <div class="modal-body text-center" style="padding:40px 32px 32px">
+
+                    <div class="delete-period-icon-wrap">
+                        <i class="bi bi-calendar-x-fill"></i>
+                    </div>
+
+                    <h5 class="delete-title">Delete Period</h5>
+
+                    <p class="delete-msg">
+                        Are you sure you want to delete period
+                        <strong id="deletePeriodLabel"></strong>?
+                        <br>
+                        <span style="color:#ef4444; font-size:12px;">
+                            All Story Points data in this period will also be deleted.
+                        </span>
+                    </p>
+
+                    <div class="delete-actions">
+                        <button type="button" class="btn-del-cancel" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn-del-confirm" id="btnConfirmDeletePeriod">
+                            <i class="bi bi-trash3"></i>
+                            Yes, Delete
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
 {{-- SCRIPT --}}
 <script>
 
@@ -414,6 +436,20 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
+    // Delete Period
+    let deletePeriodTargetId = null;
+
+    function confirmDeletePeriod(id, label) {
+        deletePeriodTargetId = id;
+        document.getElementById('deletePeriodLabel').textContent = label;
+        new bootstrap.Modal(document.getElementById('deletePeriodModal')).show();
+    }
+
+    document.getElementById('btnConfirmDeletePeriod').addEventListener('click', function () {
+        if (deletePeriodTargetId) {
+            document.getElementById('deletePeriodForm-' + deletePeriodTargetId).submit();
+        }
+    });
 </script>
 
 <style>
@@ -774,6 +810,42 @@ document.addEventListener('DOMContentLoaded', function () {
 .table-responsive::-webkit-scrollbar { height: 8px; }
 .table-responsive::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 999px; }
 
+    .delete-period-icon-wrap {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: #fef2f2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        border: 6px solid #fee2e2;
+    }
+    .delete-period-icon-wrap i { font-size: 30px; color: #ef4444; }
+
+    .delete-title  { font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 10px; }
+    .delete-msg    { font-size: 13px; color: #6b7280; line-height: 1.7; margin-bottom: 28px; }
+    .delete-actions { display: flex; gap: 10px; justify-content: center; }
+
+    .btn-del-cancel {
+        height: 42px; padding: 0 24px;
+        border: 1px solid #e5e7eb; border-radius: 12px;
+        background: #fff; color: #374151;
+        font-size: 13px; font-weight: 600;
+        cursor: pointer; transition: background .15s;
+    }
+    .btn-del-cancel:hover { background: #f3f4f6; }
+
+    .btn-del-confirm {
+        height: 42px; padding: 0 24px;
+        border: none; border-radius: 12px;
+        background: #ef4444; color: #fff;
+        font-size: 13px; font-weight: 600;
+        cursor: pointer;
+        display: flex; align-items: center; gap: 7px;
+        transition: background .15s;
+    }
+    .btn-del-confirm:hover { background: #dc2626; }
 </style>
 
 @endsection

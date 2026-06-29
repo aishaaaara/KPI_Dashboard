@@ -25,10 +25,27 @@ public function index(Request $request)
     $selectedPeriod = $request->period_id ?? $periods->last()?->id;
 
     $storyPoints = StoryPoint::with(['member.position', 'period'])
-        ->when($selectedPeriod, function ($query) use ($selectedPeriod) {
-            $query->where('period_id', $selectedPeriod);
-        })
-        ->get();
+    ->when($selectedPeriod, function ($query) use ($selectedPeriod) {
+        $query->where('period_id', $selectedPeriod);
+    })
+    ->get()
+    ->map(function ($sp) {                                        
+        $achievement = $sp->target > 0
+            ? round(($sp->totals / $sp->target) * 100)
+            : 0;
+
+        $sp->achievement_pct    = $achievement;
+        $sp->achievement_result = $this->getAchievementStatus($achievement);
+
+        $periodDate  = \Carbon\Carbon::createFromDate(
+            $sp->period->year,
+            date('n', strtotime($sp->period->month)),
+            1
+        );
+        $sp->is_locked = $periodDate->lt(now()->startOfMonth());
+
+        return $sp;
+    });
 
     $existingPeriods = Period::select( 'month','year')->get();
 
@@ -133,58 +150,66 @@ public function storePeriod(Request $request)
     return redirect()->back()->with('success', 'New period added successfully');
 }
     
-public function update(Request $request,$id)
-{
-    $storyPoint = StoryPoint::findOrFail($id);
-    $period     = Period::findOrFail($storyPoint->period_id);
+    public function update(Request $request,$id)
+    {
+        $storyPoint = StoryPoint::findOrFail($id);
+        $period     = Period::findOrFail($storyPoint->period_id);
 
-    if ($this->isPeriodLocked($period)) {
-        return back()->with('error', 'Periode ini sudah terkunci dan tidak dapat diubah.');
+        if ($this->isPeriodLocked($period)) {
+            return back()->with('error', 'Periode ini sudah terkunci dan tidak dapat diubah.');
+        }
+
+        $achievement = $request->target > 0
+            ? round(($request->totals / $request->target) * 100)
+            : 0;
+
+        $storyPoint->update([
+            'target' => $request->target,
+            'totals' => $request->totals,
+            'summary' => $achievement,
+        ]);
+
+        return redirect()
+            ->back()
+            ->with(
+                'success',
+                'Story Point berhasil diupdate'
+            );
     }
 
-    $achievement = $request->target > 0
-        ? round(($request->totals / $request->target) * 100)
-        : 0;
-
-    $storyPoint->update([
-        'target' => $request->target,
-        'totals' => $request->totals,
-        'summary' => $achievement,
-    ]);
-
-    return redirect()
-        ->back()
-        ->with(
-            'success',
-            'Story Point berhasil diupdate'
-        );
-}
-
-public function destroy($id)
-{
-    StoryPoint::findOrFail($id)
-        ->delete();
-
-    return redirect()
-        ->back()
-        ->with(
-            'success',
-            'Story Point berhasil dihapus'
-        );
-}
-
-public function destroyPeriod($id)
+    public function destroy($id)
     {
-        Period::findOrFail($id)
+        StoryPoint::findOrFail($id)
             ->delete();
 
         return redirect()
             ->back()
             ->with(
                 'success',
-                'Month and all related story point data deleted successfully'
+                'Story Point berhasil dihapus'
             );
     }
+
+    public function destroyPeriod($id)
+        {
+            Period::findOrFail($id)->delete();
+
+            return redirect()
+                ->back()
+                ->with(
+                    'success',
+                    'Month and all related story point data deleted successfully'
+                );
+        }
+
+    private function getAchievementStatus(int $achievement): array
+    {
+        if ($achievement >= 110) return ['class' => 'status-success', 'label' => 'Exceeded'];
+        if ($achievement >= 90)  return ['class' => 'status-primary', 'label' => 'Achieved'];
+        if ($achievement >= 75)  return ['class' => 'status-warning', 'label' => 'Near Target'];
+        return                          ['class' => 'status-danger',  'label' => 'Below Target'];
+    }
+
 
     private function isPeriodLocked(Period $period): bool
 {

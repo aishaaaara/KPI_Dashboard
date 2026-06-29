@@ -10,11 +10,7 @@ class NotificationController extends Controller
     // Halaman riwayat notifikasi
     public function page(Request $request)
     {
-        // Tandai semua sebagai dibaca saat halaman dibuka
-        Notification::forUser(auth()->id())
-            ->unread()
-            ->update(['read_at' => now()]);
-
+        
         $notifications = Notification::forUser(auth()->id())
             ->latest()
             ->paginate(20);

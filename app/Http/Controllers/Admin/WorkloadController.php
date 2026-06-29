@@ -116,18 +116,18 @@ public function destroy($id)
         );
 }
 
-public function destroyPeriod($id)
-{
-    Workload::where('period_id', $id)
-        ->delete();
+    public function destroyPeriod($id)
+        {
+            Period::findOrFail($id)
+                ->delete();
 
-    return redirect()
-        ->back()
-        ->with(
-            'success',
-            'Workload for the period deleted successfully'
-        );
-}
+            return redirect()
+                ->back()
+                ->with(
+                    'success',
+                    'Month and all related Workload data deleted successfully'
+                );
+        }
 
 public function storePeriod(Request $request)
 {

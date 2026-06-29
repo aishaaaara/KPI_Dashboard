@@ -20,13 +20,6 @@
     @endif
 </div>
 
-{{-- ===================== SUCCESS ALERT ===================== --}}
-@if (session('success'))
-    <div class="alert-success-bar">
-        <i class="bi bi-check-circle-fill"></i>
-        {{ session('success') }}
-    </div>
-@endif
 
 {{-- ===================== NOTIFICATION LIST ===================== --}}
 @if ($notifications->isEmpty())
@@ -196,7 +189,8 @@
         gap: 14px;
         padding: 16px 20px;
         border-bottom: 1px solid #f1f5f9;
-        transition: background .12s;
+        transition: background .12s, border-left .12s;
+        border-left: 4px solid transparent; /* biar layout tidak geser saat unread */
     }
 
     .notif-item:last-child {
@@ -208,11 +202,13 @@
     }
 
     .notif-item.unread {
-        background: #eff6ff;
+        background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%);
+        border-left: 4px solid #2563eb;
+        position: relative;
     }
 
     .notif-item.unread:hover {
-        background: #dbeafe;
+        background: linear-gradient(135deg, #dbeafe 0%, #bae6fd 100%);
     }
 
     /* ----- Icon ----- */
