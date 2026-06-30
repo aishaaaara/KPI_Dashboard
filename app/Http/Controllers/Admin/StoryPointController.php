@@ -159,8 +159,7 @@ public function storePeriod(Request $request)
             return back()->with('error', 'Periode ini sudah terkunci dan tidak dapat diubah.');
         }
 
-        $achievement = $request->target > 0
-            ? round(($request->totals / $request->target) * 100)
+        $achievement = $request->target > 0 ? round(($request->totals / $request->target) * 100)
             : 0;
 
         $storyPoint->update([

@@ -101,21 +101,13 @@ class CommunicationController extends Controller
         ) / 3;
 
         Communication::create([
-
             'member_id' => $request->member_id,
-
             'period_id' => $request->period_id,
-
             'clarity' => $request->clarity,
-
             'responsiveness' => $request->responsiveness,
-
             'collaboration' => $request->collaboration,
-
             'overall_score' => round($overall, 2),
-
             'notes' => $request->notes
-
         ]);
 
         return redirect()
@@ -195,13 +187,7 @@ class CommunicationController extends Controller
         return back()->with('error', 'Periode ini sudah terkunci dan tidak dapat diubah.');
     }
 
-    $overall = (
-
-        $request->clarity +
-        $request->responsiveness +
-        $request->collaboration
-
-    ) / 3;
+    $overall = ( $request->clarity + $request->responsiveness + $request->collaboration) / 3;
 
     $communication->update([
 

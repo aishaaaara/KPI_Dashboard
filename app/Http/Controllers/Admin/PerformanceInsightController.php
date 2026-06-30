@@ -173,33 +173,5 @@ class PerformanceInsightController extends Controller
         return 'Critical Performance';
     }
 
-    private function getScoreClass(float $score): string
-    {
-        if ($score >= 85) return 'fill--success';
-        if ($score >= 70) return 'fill--warning';
-        return 'fill--danger';
-    }
-
-    private function getStatusBadge(float $overall): array
-    {
-        if ($overall >= 90) return ['Excellent',     'badge--success'];
-        if ($overall >= 80) return ['Good',          'badge--primary'];
-        if ($overall >= 70) return ['Need Improve',  'badge--warning'];
-        return                    ['Critical',        'badge--danger'];
-    }
-
-    private function getRecStyle(string $recommendation): array
-    {
-        return match ($recommendation) {
-            'Excellent Performance' => ['rec--success', 'bi-check-circle',
-                'Performa luar biasa! Pertahankan konsistensi dan jadilah mentor tim.'],
-            'Good Performance'      => ['rec--info',    'bi-lightbulb',
-                'Performa baik. Identifikasi satu aspek terlemah dan fokus perbaiki bulan depan.'],
-            'Need Improvement'      => ['rec--warning', 'bi-exclamation-triangle',
-                'Beberapa aspek KPI perlu ditingkatkan. Diskusikan hambatan dengan tim lead secepatnya.'],
-            default                 => ['rec--danger',  'bi-exclamation-circle',
-                'KPI di bawah target secara keseluruhan. Diperlukan evaluasi mendalam bersama manajer.'],
-        };
-    }
 
 }
