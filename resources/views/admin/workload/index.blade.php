@@ -100,15 +100,16 @@
 
                 <tr>
 
-                    <th width="90">EID</th>
-                    <th>Member</th>
-                    <th width="75">All</th>
-                    <th width="75">Todo</th>
-                    <th width="75">Progress</th>
-                    <th width="75">Review</th>
-                    <th width="75">Done</th>
-                    <th width="150">Completion</th>
-                    <th width="100">Action</th>
+                <th width="80">EID</th>
+                <th width="220">Member</th>
+                <th width="60">All</th>
+                <th width="60">Todo</th>
+                <th width="70">Progress</th>
+                <th width="60">Review</th>
+                <th width="60">Done</th>
+                <th width="160">Completion</th>
+                <th width="110">Status</th>
+                <th width="90">Action</th>
 
                 </tr>
 
@@ -177,6 +178,7 @@
                         <td>
                             {{ $workload->done }}
                         </td>
+
                         <td>
                         <div class="achievement-wrapper">
 
@@ -188,14 +190,32 @@
 
                             </div>
 
-                            <span>
-                                {{ $completion }}%
-                            </span>
+                            <span> {{ $completion }}%</span>
 
                         </div>
-
                         </td>
-                      
+                        @php
+                            if ($completion >= 100) {
+                                $statusLabel = 'Done';
+                                $statusClass = 'status-success';
+                            } elseif ($completion >= 60) {
+                                $statusLabel = 'Good';
+                                $statusClass = 'status-primary';
+                            } elseif ($completion >= 30) {
+                                $statusLabel = 'At Risk';
+                                $statusClass = 'status-warning';
+                            } else {
+                                $statusLabel = 'Critical';
+                                $statusClass = 'status-danger';
+                            }
+                        @endphp
+
+                        <td>
+                            <span class="status-badge {{ $statusClass }}">
+                                {{ $statusLabel }}
+                            </span>
+                        </td>
+
                         @php
                             $periodDate = \Carbon\Carbon::createFromDate(
                                 $workload->period->year,
