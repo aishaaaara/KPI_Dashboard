@@ -47,135 +47,83 @@ class PerformanceInsightController extends Controller
 }
 
     public function generate(Request $request)
+{
+    $periodId = $request->period_id;
+
+    // Member yang insight-nya sudah terkirim TIDAK dihapus/diregenerate.
+    // Hanya insight yang belum terkirim (is_sent = 0) yang dihapus & dibuat ulang.
+    $sentMemberIds = PerformanceInsight::where('period_id', $periodId)
+        ->where('is_sent', 1)
+        ->pluck('member_id');
+
+    PerformanceInsight::where('period_id', $periodId)
+        ->where('is_sent', 0)
+        ->delete();
+
+    // Skip member yang insight-nya sudah terkirim, biar data yang sudah
+    // dilihat member tidak berubah diam-diam.
+    $members = Member::whereNotIn('id', $sentMemberIds)->get();
+
+    foreach($members as $member)
     {
-        $periodId = $request->period_id;
-            // Cegah regenerate kalau ada insight yang sudah dikirim di periode ini
-        $alreadySent = PerformanceInsight::where('period_id', $periodId)
-            ->where('is_sent', 1)
-            ->exists();
-            if ($alreadySent) {
-        return redirect()
-            ->route('performance-insight.index', ['period_id' => $periodId])
-            ->with('error', 'Tidak bisa generate ulang, sebagian insight di periode ini sudah dikirim ke member');
-    }
-
-        PerformanceInsight::where(
-            'period_id',
-            $periodId
-        )->delete();
-
-        $members = Member::all();
-
-        foreach($members as $member)
-        {
-            $communication =
-                Communication::where(
-                    'member_id',
-                    $member->id
-                )
-                ->where(
-                    'period_id',
-                    $periodId
-                )
+        $communication =
+            Communication::where('member_id', $member->id)
+                ->where('period_id', $periodId)
                 ->first();
 
-            $storyPoint =
-                StoryPoint::where(
-                    'member_id',
-                    $member->id
-                )
-                ->where(
-                    'period_id',
-                    $periodId
-                )
+        $storyPoint =
+            StoryPoint::where('member_id', $member->id)
+                ->where('period_id', $periodId)
                 ->first();
 
-            $workload =
-                Workload::where(
-                    'member_id',
-                    $member->id
-                )
-                ->where(
-                    'period_id',
-                    $periodId
-                )
+        $workload =
+            Workload::where('member_id', $member->id)
+                ->where('period_id', $periodId)
                 ->first();
 
-            if(
-                !$communication ||
-                !$storyPoint ||
-                !$workload
-            ){
-                continue;
-            }
-
-            $communicationScore =
-                $communication->overall_score;
-
-            $storyPointScore =
-                $storyPoint->target > 0
-                ? ($storyPoint->totals / $storyPoint->target) * 100
-                : 0;
-
-            $workloadScore =
-                $workload->all_task > 0
-                ? ($workload->done / $workload->all_task) * 100
-                : 0;
-
-            $overall =
-                (
-                    $communicationScore +
-                    $storyPointScore +
-                    $workloadScore
-                ) / 3;
-
-            if($overall >= 90)
-            {
-                $recommendation =
-                    'Excellent Performance';
-            }
-            elseif($overall >= 80)
-            {
-                $recommendation =
-                    'Good Performance';
-            }
-            elseif($overall >= 70)
-            {
-                $recommendation =
-                    'Need Improvement';
-            }
-            else
-            {
-                $recommendation =
-                    'Critical Performance';
-            }
-
-            PerformanceInsight::create([
-
-                'member_id' => $member->id,
-
-                'period_id' => $periodId,
-
-                'communication_score' => round($communicationScore,2),
-
-                'story_point_score' => round($storyPointScore,2),
-
-                'workload_score' => round($workloadScore,2),
-
-                'overall_score' => round($overall,2),
-
-                'recommendation' => $recommendation,
-
-                'is_sent' => 0
-
-            ]);
+        if(!$communication || !$storyPoint || !$workload){
+            continue;
         }
 
-        return redirect()
-        ->route('performance-insight.index', ['period_id' => $periodId]) // ← ganti ini
-        ->with('success', 'Performance Insight berhasil digenerate');
+        $communicationScore = $communication->overall_score;
+
+        $storyPointScore =
+            $storyPoint->target > 0
+            ? ($storyPoint->totals / $storyPoint->target) * 100
+            : 0;
+
+        $workloadScore =
+            $workload->all_task > 0
+            ? ($workload->done / $workload->all_task) * 100
+            : 0;
+
+        $overall =
+            ($communicationScore + $storyPointScore + $workloadScore) / 3;
+
+        $recommendation = $this->getRecommendation($overall);
+
+        PerformanceInsight::create([
+            'member_id' => $member->id,
+            'period_id' => $periodId,
+            'communication_score' => round($communicationScore, 2),
+            'story_point_score' => round($storyPointScore, 2),
+            'workload_score' => round($workloadScore, 2),
+            'overall_score' => round($overall, 2),
+            'recommendation' => $recommendation,
+            'is_sent' => 0
+        ]);
     }
 
+    $skippedCount = $sentMemberIds->count();
+    $message = 'Performance Insight berhasil digenerate';
+    if ($skippedCount > 0) {
+        $message .= " ($skippedCount insight yang sudah terkirim tidak diubah)";
+    }
+
+    return redirect()
+        ->route('performance-insight.index', ['period_id' => $periodId])
+        ->with('success', $message);
+}
     
    public function send(Request $request)
 {

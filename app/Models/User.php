@@ -52,4 +52,14 @@ class User extends Authenticatable
     return $this->hasOne(Member::class);
 }
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($user) {
+            if ($user->role === 'admin') {
+                throw new \Exception('Admin tidak bisa dihapus!');
+            }
+        });
+    }
 }
