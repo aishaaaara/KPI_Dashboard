@@ -17,20 +17,6 @@
         </div>
     </div>
 
-    {{-- ALERT SUKSES --}}
-    @if(session('success'))
-        <div class="aw-alert">
-            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                 stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px" aria-hidden="true">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/>
-                <path d="M9 12l2 2l4 -4"/>
-            </svg>
-            {{ session('success') }}
-        </div>
-    @endif
-
     {{-- TABLE CARD --}}
     <div class="aw-card">
         <div class="table-responsive">

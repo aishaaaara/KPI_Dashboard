@@ -23,10 +23,14 @@ class PerformanceInsightController extends Controller
 
     $insights = PerformanceInsight::with([
         'member.position',
+        'member.user',
         'period'
             ])
             ->whereHas('member')
             ->whereHas('period') // ← tambah ini
+            ->whereHas('member', function ($query) {
+                $query->whereNotNull('user_id'); // ← hanya member yang sudah punya akun user
+            })
             ->when($selectedPeriod, function ($query) use ($selectedPeriod) {
                 $query->where('period_id', $selectedPeriod);
             })
@@ -114,11 +118,8 @@ class PerformanceInsightController extends Controller
         ]);
     }
 
-    $skippedCount = $sentMemberIds->count();
     $message = 'Performance Insight berhasil digenerate';
-    if ($skippedCount > 0) {
-        $message .= " ($skippedCount insight yang sudah terkirim tidak diubah)";
-    }
+
 
     return redirect()
         ->route('performance-insight.index', ['period_id' => $periodId])
@@ -148,7 +149,17 @@ class PerformanceInsightController extends Controller
         );
     }
 
+    $skippedNoUser = [];
+    $sentCount     = 0;
+
     foreach ($insights as $insight) {
+        // Skip member yang belum punya akun user (belum di-approve/register),
+        // supaya tidak error saat notifikasi dikirim.
+        if (!$insight->member || !$insight->member->user_id) {
+            $skippedNoUser[] = $insight->member->name ?? 'ID ' . $insight->member_id;
+            continue;
+        }
+
         $insight->update([
             'is_sent'     => 1,
             'sent_at'     => now(),
@@ -161,9 +172,23 @@ class PerformanceInsightController extends Controller
             $insight->member->user_id,
             $insight->period->month . ' ' . $insight->period->year
         );
+
+        $sentCount++;
     }
 
-    return redirect()->back()->with('success', 'Insight berhasil dikirim');
+    if ($sentCount === 0) {
+        return redirect()->back()->with(
+            'error',
+            'Tidak ada insight yang terkirim. Member berikut belum memiliki akun user: ' . implode(', ', $skippedNoUser)
+        );
+    }
+
+    $message = "{$sentCount} insight berhasil dikirim";
+    if (!empty($skippedNoUser)) {
+        $message .= '. Dilewati karena belum punya akun user: ' . implode(', ', $skippedNoUser);
+    }
+
+    return redirect()->back()->with('success', $message);
 }
     private function getRecommendation(float $overall): string
     {

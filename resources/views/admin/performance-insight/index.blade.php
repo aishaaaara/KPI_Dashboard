@@ -54,6 +54,14 @@
 
     </div>
 
+    {{-- ===================== INFO BANNER ===================== --}}
+    @if ($insights->isNotEmpty())
+        <div class="info-banner">
+            <i class="bi bi-info-circle-fill"></i>
+            <span>Daftar di bawah hanya menampilkan member yang sudah memiliki akun user. Member yang belum registrasi/disetujui akan otomatis muncul di sini setelah akunnya aktif.</span>
+        </div>
+    @endif
+
 
 
 {{-- ===================== MAIN CONTENT ===================== --}}
@@ -445,6 +453,27 @@
         padding: 10px 14px;
         font-size: 13px;
         margin-bottom: 16px;
+    }
+
+    /* ----- Info Banner ----- */
+    .info-banner {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        background: #eff6ff;
+        color: #1e40af;
+        border: 1px solid #bfdbfe;
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 12.5px;
+        line-height: 1.5;
+        margin-bottom: 14px;
+    }
+
+    .info-banner i {
+        font-size: 14px;
+        margin-top: 1px;
+        flex-shrink: 0;
     }
 
     /* ----- Empty State ----- */
