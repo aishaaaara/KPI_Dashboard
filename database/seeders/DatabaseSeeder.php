@@ -12,6 +12,10 @@ public function run(): void
 {
     $this->call([
         AdminSeeder::class,
+        PositionSeeder::class,
+        TeamSeeder::class,
+        EmploymentTypeSeeder::class,
     ]);
 }
+
 }
