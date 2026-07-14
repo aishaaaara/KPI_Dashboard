@@ -26,9 +26,8 @@ class CommunicationController extends Controller
         ->when($selectedPeriod, function ($query) use ($selectedPeriod) {
             $query->where('period_id', $selectedPeriod);
         })
-        ->latest()
         ->get()
-        ->map(function ($comm) {                          // ← tambah ini
+        ->map(function ($comm) {                         
             $comm->clarity_class       = $this->getScoreClass($comm->clarity);
             $comm->responsiveness_class = $this->getScoreClass($comm->responsiveness);
             $comm->collaboration_class = $this->getScoreClass($comm->collaboration);
